@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Clases Interactivo</title>
+    <style>
+        /* Estilos generales para ocupar toda la pantalla */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; /* Ocultamos barras de scroll nativas */
+            background-color: #1e1e1e; /* Fondo oscuro moderno */
+            color: #ffffff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        /* Panel de instrucciones superior */
+        #header { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            padding: 15px; 
+            background: rgba(20, 20, 20, 0.85); 
+            backdrop-filter: blur(5px);
+            z-index: 10; 
+            text-align: center; 
+            box-sizing: border-box; 
+            border-bottom: 1px solid #333;
+        }
+        
+        #header h2 { margin: 0 0 5px 0; font-size: 20px; color: #4facfe; }
+        #header p { margin: 0; font-size: 14px; color: #aaaaaa; }
+
+        /* Contenedor del diagrama */
+        #mermaid-container { 
+            width: 100vw; 
+            height: 100vh; 
+            cursor: grab; /* Cursor de "agarrar" */
+        }
+        #mermaid-container:active { cursor: grabbing; } /* Cursor cerrado al arrastrar */
+        
+        /* Aseguramos que el SVG pueda crecer libremente */
+        svg { max-width: none !important; max-height: none !important; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <h2>Diagrama de Clases del Proyecto</h2>
+        <p><b>Rueda del ratón:</b> Acercar/Alejar | <b>Clic y arrastrar:</b> Moverse por el diagrama</p>
+    </div>
+    
+    <div id="mermaid-source" style="display: none;">
+classDiagram
+
+    %% --- Enemigos ---
+    MonoBehaviourPun <|-- Atropello
+    class Atropello {
+        +float velocidadMinimaParaMatar
+        +float dañoAtropello
+        +AudioClip sonidoChoque
+        +GameObject efectoSangre
+        -void OnCollisionEnter(Collision collision)
+        -void MostrarEfectosAtropello(Vector3 puntoContacto)
+    }
+
+    MonoBehaviourPun <|-- BossIA
+    class BossIA {
+        +float vidaMaxima
+        +float vidaActual
+        +int puntosBoss
+        -bool estaMuerto
+        +Transform player
+        +float velocidadBoss
+        +float distanciaMinima
+        +GameObject prefabBolaFuego
+        +Transform puntoDisparo
+        +float cadenciaDisparo
+        +AudioClip sonidoAtaque
+        -float tiempoSiguienteDisparo
+        +Animator animator
+        -void Awake()
+        -void Start()
+        -void Update()
+        -void DispararFuego()
+        +void RecibirDañoBoss(float cantidad, PhotonMessageInfo info)
+        -void MorirBoss(bool fueMio)
+    }
+
+    MonoBehaviour <|-- Cercano
+    class Cercano {
+        +Transform player
+        +Animator animator
+        +int vive
+        +float activationRange
+        +float stopRange
+        +float speed
+        +float distanciaAtaque
+        -bool active
+        -void Start()
+        -void Update()
+        -void OnCollisionEnter(Collision other)
+        +void Morir()
+        -void OnDrawGizmosSelected()
+    }
+
+    MonoBehaviourPun <|-- PatrulleroTirador
+    class PatrulleroTirador {
+        +int vive
+        +Animator animator
+        +Transform player
+        +float chaseSpeed
+        +float distanciaDisparo
+        +GameObject bulletPrefab
+        +Transform shootPoint
+        +float fireRate
+        +float bulletSpeed
+        +AudioClip sonidoDisparo
+        -float fireCooldown
+        -NavMeshAgent agent
+        -void Start()
+        -void Update()
+        -void BuscarJugadorMasCercano()
+        -void ComportamientoCombate(float distancia)
+        -void Disparar()
+        -void EfectosDisparoRed(Vector3 posicion, Vector3 direccion)
+        +void Morir()
+        -void OnDrawGizmosSelected()
+    }
+
+    MonoBehaviour <|-- patruyero
+    class patruyero {
+        +Transform[] puntos
+        +float patrolSpeed
+        +float distanciaMinima
+        +Transform player
+        +float chaseSpeed
+        +float detectionRange
+        +float loseRange
+        +float rotateSpeed
+        -void Update()
+        -void Patrullar()
+        -void Perseguir()
+        -void RotarHacia(Vector3 direccion)
+    }
+
+    MonoBehaviour <|-- SeguirSimple
+    class SeguirSimple {
+        +Transform player
+        +Animator animator
+        +int vive
+        +float MoveSpeed
+        +float distanciaAtaque
+        -void Start()
+        -void Update()
+        -void OnCollisionEnter(Collision other)
+        +void Morir()
+    }
+
+    %% --- Jugador ---
+    MonoBehaviour <|-- ActivadorIsla
+    class ActivadorIsla {
+        -bool yaActivado
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- CamaraCoche
+    class CamaraCoche {
+        +Transform cocheObjetivo
+        +Transform puntoCamara
+        +float velocidadSuavizado
+        +float velocidadRotacion
+        -void FixedUpdate()
+    }
+
+    MonoBehaviourPun <|-- CamaraMovement
+    class CamaraMovement {
+        +float velocidad
+        +Transform jugador
+        -float rotacionX
+        -Vector3 ultimaPosicion
+        -float acumuladorDistancia
+        -void Start()
+        -void Update()
+        +void BloquearCursor()
+        +void DesbloquearCursor()
+    }
+
+    MonoBehaviourPun <|-- Escopeta
+    class Escopeta {
+        +Camera camaraJugador
+        +Transform puntaCanon
+        +Transform modeloArma
+        +AudioClip sonidoDisparo
+        +AudioClip sonidoRecarga
+        +string idArma
+        +int perdigones
+        +float dispersion
+        +float rango
+        +float dañoPorPerdigon
+        +float tiempoEntreDisparos
+        +int balasCargador
+        +int balasActuales
+        +int balasReserva
+        +int capacidadMochila
+        +float tiempoRecarga
+        -bool estaRecargando
+        +GameObject balaVisualPrefab
+        +GameObject efectoImpacto
+        +float velocidadBalaVisual
+        -float tiempoSiguienteDisparo
+        -Quaternion rotacionOriginal
+        -Vector3 posicionOriginal
+        -void Awake()
+        -void OnEnable()
+        -void Start()
+        -void AplicarStats()
+        -void Update()
+        -void Disparar()
+        +void RecibirMunicion(int cantidad)
+        -void OnGUI()
+    }
+
+    MonoBehaviourPun <|-- GameController
+    class GameController {
+        +float aceleracion
+        +float velocidadGiro
+        +float suavizadoGiro
+        +float velocidadMaxima
+        +float agarreLateral
+        +GameObject luzFrenoIzquierda
+        +GameObject luzFrenoDerecha
+        +Transform ruedaDelanteraIzquierda
+        +Transform ruedaDelanteraDerecha
+        +Transform ruedaTraseraIzquierda
+        +Transform ruedaTraseraDerecha
+        -Rigidbody rb
+        -float inputMotor
+        -float inputGiro
+        -float giroActual
+        -bool frenando
+        -void Start()
+        -void Update()
+        -void FixedUpdate()
+        -void ControlarLuces()
+        -void AnimarRuedas()
+    }
+
+    MonoBehaviourPun <|-- InteraccionCoche
+    class InteraccionCoche {
+        +GameObject camaraCoche
+        +GameObject uiMensaje
+        +GameObject canvasMira
+        +Transform puntoSalida
+        +float distanciaInteraccion
+        +float probabilidadPenetracion
+        -GameController scriptMovimientoCoche
+        -bool estoyConduciendo
+        -bool cocheOcupado
+        -void Start()
+        -void Update()
+        -void EntrarAlCoche()
+        -void SalirDelCoche()
+        -void SincronizarOcupacionCoche(bool ocupado)
+        +void RecibirDaño(float cantidad)
+        +void RecibirDañoRed(float cantidad, PhotonMessageInfo info)
+    }
+
+    MonoBehaviourPun <|-- PlayerController
+    class PlayerController {
+        +PlayerController LocalInstance
+        +RawImage imagenSangre
+        +AudioClip sonidoDolor
+        +float velocidadCaminar
+        +float velocidadCorrer
+        +float fuerzaSalto
+        +float gravedad
+        +float staminaMax
+        +float tasaRecuperacion
+        -float staminaActual
+        -bool estaCorriendo
+        +float vidaMaxima
+        +float vidaActual
+        +bool estaCaido
+        -float tiempoDesangrado
+        -float progresoRevivir
+        -PlayerController companeroViendo
+        +Transform sueloCheck
+        +float radioSuelo
+        +LayerMask capaSuelo
+        -CharacterController controller
+        -Vector3 velocidadVertical
+        -bool enSuelo
+        -Animator animator
+        -void Awake()
+        -void Start()
+        -void Update()
+        -void ActualizarStamina()
+        +void RecibirDaño(float cantidad)
+        +void EntrarEstadoCaido()
+        -void MuerteDefinitiva()
+        +void Curar(float cantidad)
+        -void ControlarEfectoSangre()
+        -void ComprobarReanimacion()
+        +void SerReanimado()
+        -void OnDrawGizmosSelected()
+        +void SincronizarVisibilidad(bool esVisible)
+        -void OnGUI()
+    }
+
+    MonoBehaviourPun <|-- PlayerInventory
+    class PlayerInventory {
+        +GameObject[] armas
+        +int armaActual
+        +bool tieneSecundaria
+        +string nombrePrefabGranada
+        +Transform puntoLanzamiento
+        +int cantidadGranadas
+        +int maxGranadas
+        +float fuerzaLanzamiento
+        +AudioClip sonidoLanzarGranada
+        +Image iconoSecundaria
+        +TextMeshProUGUI textoGranadas
+        +Color colorDesactivado
+        +Color colorActivado
+        -void Start()
+        -void Update()
+        -void EquiparArmaRed(int indice)
+        -void EquiparArmaLocal(int indice)
+        +void DesbloquearSecundaria()
+        -void LanzarGranada()
+        +void RecibirGranadas(int cantidad)
+        -void ActualizarUI()
+    }
+
+    MonoBehaviourPun <|-- RayCastGun
+    class RayCastGun {
+        +Camera playerCamera
+        +Transform laserOrigin
+        +Transform modeloArma
+        +AudioClip sonidoDisparo
+        +AudioClip sonidoRecarga
+        +string idArma
+        +float gunRange
+        +float fireRate
+        +float laserDuration
+        +float damage
+        +int balasCargador
+        +int balasActuales
+        +int balasReserva
+        +int capacidadMochila
+        +float tiempoRecarga
+        -bool estaRecargando
+        -LineRenderer laserLine
+        -float fireTimer
+        -Quaternion rotacionOriginal
+        -void Awake()
+        -void AplicarStatsDeBaseDeDatos()
+        -void OnEnable()
+        -void Update()
+        -void DispararLaser()
+        +void RecibirMunicion(int cantidad)
+        -void OnGUI()
+    }
+
+    MonoBehaviourPun <|-- VidaEnemigo
+    class VidaEnemigo {
+        +float vidaMaxima
+        +float vidaActual
+        +int puntosRecompensa
+        +Slider barraDeVida
+        +Animator animator
+        +Canvas canvasVida
+        +string nombrePrefabMunicion
+        +float probabilidadDrop
+        +string nombrePrefabGranada
+        +float probabilidadGranada
+        -bool estaMuerto
+        +bool perteneceALaRonda
+        -void Start()
+        -void LateUpdate()
+        +void RecibirDañoRed(float cantidad, PhotonMessageInfo info)
+        -void Morir(bool fueMio)
+        -void GenerarLootEnRed()
+    }
+
+    %% --- Managers ---
+    MonoBehaviour <|-- ConfiguracionManager
+    class ConfiguracionManager {
+        +Slider sliderVolumen
+        +Slider sliderBrillo
+        +TMP_Dropdown dropdownResolucion
+        +TMP_Dropdown dropdownModoJuego
+        +Image panelBrilloOverlay
+        -Resolution[] resolucionesSoportadas
+        -void Start()
+        -void ConfigurarDropdownResoluciones()
+        -void ConfigurarDropdownModoJuego()
+        +void CambiarVolumen(float valor)
+        +void CambiarBrillo(float valor)
+        +void CambiarResolucion(int indiceOpcion)
+        +void CambiarModoJuego(int indiceOpcion)
+        -void CargarAjustesGuardados()
+    }
+
+    MonoBehaviour <|-- ControlLuz
+    class ControlLuz {
+        +Light luz
+        +float paso
+        -void Update()
+    }
+
+    MonoBehaviourPun <|-- GameManager
+    class GameManager {
+        +GameManager Instance
+        +string nombrePrefabEnemigo
+        +string nombrePrefabBoss
+        +string nombrePrefabBossFinal
+        +string nombrePrefabBotiquin
+        +string nombrePrefabArmaSecundaria
+        +Transform[] puntosDeSpawn
+        +Transform spawnBoss
+        +Transform[] puntosSpawnBotiquines
+        +Transform[] puntosSpawnArmas
+        +int enemigosPorRonda
+        +float tiempoEntreRondas
+        +int rondaFinal
+        +GameObject naveEspacial
+        -bool armaYaSpawneada
+        +int botiquinesPorRonda
+        +int rondaActual
+        +int enemigosVivos
+        +int totalMuertes
+        -bool partidaTerminada
+        +int puntosPorEnemigoNormal
+        +int puntosPorBoss
+        +int puntosBonusVictoria
+        +int puntuacionActualPartida
+        +TextMeshProUGUI textoPuntuacion
+        +TextMeshProUGUI textoRonda
+        +int jugadoresCaidos
+        +bool empezarRondaAlInicio
+        -void Awake()
+        -void Start()
+        +void ActivarRondasManualmente()
+        -void SpawnearBoss(string nombrePrefab)
+        -void SpawnearArmaSecundaria()
+        -void SpawnearBotiquines()
+        -void GenerarEnemigo()
+        +void EnemigoDerrotado(bool esJefe = false, bool perteneceALaRonda = true)
+        -void ActualizarTextoRondaRed(int rondaNum, string textoAMostrar)
+        -void ActualizarPuntuacionRed(int bajas, int puntos)
+        -void ActivarFinalNivelRed()
+        -void CambiarMusicaRed(bool esBoss)
+        +void VictoriaPartida()
+        +void DerrotaPartida()
+        -void GuardarEstadisticasEnLaNube()
+        +float ObtenerTiempoDesangrado()
+        +void RegistrarCaidaJugador()
+        +void RegistrarReanimacionJugador()
+        +void EjecutarDerrotaGlobalRed()
+    }
+
+    MonoBehaviourPun <|-- GameManager2
+    class GameManager2 {
+        +GameManager2 Instance
+        +int multiplicadorDificultad
+        +float velocidadDeSpawn
+        +int escoltaDelBoss
+        +string nombrePrefabEnemigo
+        +string nombrePrefabBoss
+        +string nombrePrefabBossFinal
+        +string nombrePrefabBotiquin
+        +string nombrePrefabArmaSecundaria
+        +Transform[] puntosDeSpawn
+        +Transform spawnBoss
+        +Transform[] puntosSpawnBotiquines
+        +Transform[] puntosSpawnArmas
+        +int enemigosPorRonda
+        +float tiempoEntreRondas
+        +int rondaFinal
+        +GameObject naveEspacial
+        -bool armaYaSpawneada
+        +int botiquinesMaximos
+        +int rondaActual
+        +int enemigosVivos
+        +int totalMuertes
+        -bool partidaTerminada
+        +int puntosPorEnemigoNormal
+        +int puntosPorBoss
+        +int puntosBonusVictoria
+        +int puntuacionActualPartida
+        +TextMeshProUGUI textoPuntuacion
+        +TextMeshProUGUI textoRonda
+        +int jugadoresCaidos
+        -void Awake()
+        -void Start()
+        -void SpawnearBoss(string nombrePrefab)
+        -void SpawnearArmaSecundaria()
+        -void SpawnearBotiquines()
+        -void GenerarEnemigo()
+        +void EnemigoDerrotado(bool esJefe = false)
+        -void ActualizarTextoRondaRed(int rondaNum, string textoAMostrar)
+        -void ActualizarPuntuacionRed(int bajas, int puntos)
+        -void ActivarFinalNivelRed()
+        -void CambiarMusicaRed(bool esBoss)
+        +void VictoriaPartida()
+        +void DerrotaPartida()
+        -void GuardarEstadisticasEnLaNube()
+        +float ObtenerTiempoDesangrado()
+        +void RegistrarCaidaJugador()
+        +void RegistrarReanimacionJugador()
+        +void EjecutarDerrotaGlobalRed()
+    }
+
+    MonoBehaviour <|-- GestorNivel
+    class GestorNivel {
+        +string idNivelActual
+        +int numeroNivelActual
+        +void CompletarNivel()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- LuzZonalTitileo
+    class LuzZonalTitileo {
+        +Light luzZonal
+        +bool encendida
+        +float intensidadBase
+        +float variacion
+        +float velocidad
+        -void Start()
+        -void Update()
+    }
+
+    MonoBehaviourPunCallbacks <|-- NetworkManager
+    class NetworkManager {
+        +NetworkManager Instancia
+        -void Awake()
+        -void Start()
+        +void OnConnectedToMaster()
+        +void CrearSala()
+        +void UnirseSala(string codigo)
+        +void OnJoinedRoom()
+        +void EmpezarPartida()
+    }
+
+    MonoBehaviour <|-- ControladorSpawn
+    class ControladorSpawn {
+        +string nombrePrefabJugador
+        +Transform[] puntosDeSpawn
+        -void Start()
+    }
+
+    %% --- Firebase ---
+    MonoBehaviour <|-- AuthManager
+    class AuthManager {
+        +AuthManager Instance_prop
+        -FirebaseAuth _auth
+        +FirebaseUser UsuarioActual
+        +bool AutenticacionLista_prop
+        -void Awake()
+        -void Start()
+        +Task~bool~ IniciarSesionAnonima()
+        +Task~bool~ IniciarSesionCorreo(string email, string password)
+        +Task~bool~ RegistrarCorreo(string email, string password, string apodo)
+        +void CerrarSesion()
+    }
+
+    MonoBehaviour <|-- BaseDeDatosManager
+    class BaseDeDatosManager {
+        +BaseDeDatosManager Instance_prop
+        -FirebaseFirestore _db
+        +bool ConfiguracionCargada_prop
+        +DatosUsuario DatosUsuarioActual_prop
+        +ProgresoJugador ProgresoActual_prop
+        -void Awake()
+        -void Start()
+        +Task DescargarConfiguracion()
+        +DatosArma ObtenerDatosArma(string idArma)
+        +DatosEnemigo ObtenerDatosEnemigo(string idEnemigo)
+        +DatosNivel ObtenerDatosNivel(string idNivel)
+        +Task VerificarUsuario(Firebase.Auth.FirebaseUser user)
+        +Task CrearNuevoUsuario(Firebase.Auth.FirebaseUser user, string apodo)
+        +Task CargarProgreso(string userId)
+        +Task GuardarProgreso()
+        +Task ActualizarEstadisticasFinPartida(int puntuacionPartida)
+        +Task ActualizarNombreUsuario(string userId, string nuevoApodo)
+        +Task ActualizarAvatarUsuario(string userId, int nuevoAvatarId)
+        +void LimpiarDatosSesion()
+    }
+
+    MonoBehaviour <|-- FirebaseManager
+    class FirebaseManager {
+        +FirebaseManager Instance_prop
+        +bool EstaInicializado
+        -void Awake()
+        -void InicializarFirebase()
+    }
+
+    %% --- Modelos ---
+    Modelos <|-- DatosArma
+    class DatosArma {
+        +string nombre_visible_prop
+        +int dano_prop
+        +float cadencia_prop
+        +int tamano_cargador_prop
+        +string tipo_prop
+        +int precio_compra_prop
+    }
+
+    Modelos <|-- DatosEnemigo
+    class DatosEnemigo {
+        +int vida_maxima_prop
+        +float velocidad_movimiento_prop
+        +int puntos_recompensa_prop
+        +List~string~ habilidades_prop
+    }
+
+    Modelos <|-- DatosNivel
+    class DatosNivel {
+        +string nombre_escena_prop
+        +int cantidad_enemigos_total_prop
+        +bool tiene_jefe_prop
+        +int tiempo_limite_prop
+    }
+
+    Modelos <|-- DatosUsuario
+    class DatosUsuario {
+        +string correo_prop
+        +string nombre_google_prop
+        +string apodo_prop
+        +bool perfil_completado_prop
+        +Timestamp fecha_registro_prop
+        +int puntuacion_global_prop
+        +int partidas_jugadas_prop
+        +int avatar_id_prop
+    }
+
+    Modelos <|-- EntradaRanking
+    class EntradaRanking {
+        +string id_usuario_prop
+        +string apodo_prop
+        +int puntuacion_prop
+        +int oleada_alcanzada_prop
+        +Timestamp fecha_prop
+    }
+
+    Modelos <|-- ProgresoJugador
+    class ProgresoJugador {
+        +int nivel_actual_prop
+        +List~string~ armas_desbloqueadas_prop
+        +List~string~ logros_desbloqueados_prop
+        +int enemigos_eliminados_prop
+        +int jefes_derrotados_prop
+        +int veces_muerto_prop
+        +int dano_infligido_prop
+        +int dano_recibido_prop
+        +float distancia_recorrida_prop
+    }
+
+    Modelos <|-- SalaJuego
+    class SalaJuego {
+        +string id_anfitrion_prop
+        +string estado_prop
+        +string dificultad_prop
+        +int max_jugadores_prop
+        +string nivel_seleccionado_prop
+        +bool is_open_prop
+        +bool is_visible_prop
+    }
+
+    %% --- Objetos ---
+    MonoBehaviour <|-- AmmoPickup
+    class AmmoPickup {
+        +int balasRifle
+        +int balasEscopeta
+        +float velocidadGiro
+        +float tiempoDesaparicion
+        -void Start()
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- Bala
+    class Bala {
+        +float damage
+        -bool yaGolpeo
+        -float tiempoVida
+        -void Start()
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- BolaFuego
+    class BolaFuego {
+        +float damage
+        +float velocidad
+        +GameObject prefabEfectoImpacto
+        +AudioClip sonidoImpacto
+        -bool yaGolpeo
+        -float tiempoVida
+        -void Start()
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+        -void Impactar(Collider other)
+    }
+
+    MonoBehaviour <|-- Botiquin
+    class Botiquin {
+        +float cantidadCura
+        +float velocidadGiro
+        +AudioClip sonidoCuracion
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- Escenario
+    class Escenario {
+        +GameObject cubo
+        +GameObject esfera
+        -void Start()
+    }
+
+    MonoBehaviourPun <|-- Granada
+    class Granada {
+        +float radio
+        +float fuerza
+        +float daño
+        +float tiempoParaExplotar
+        +GameObject efectoExplosion
+        +AudioClip sonidoExplosion
+        -bool haChocado
+        -float tiempoCreacion
+        -void Start()
+        -void OnCollisionEnter(Collision collision)
+        -void Explotar()
+        -void EfectosExplosionRed(Vector3 posicionExacta)
+    }
+
+    MonoBehaviour <|-- GrenadePickup
+    class GrenadePickup {
+        +int cantidadAñadir
+        +float velocidadGiro
+        +float tiempoDesaparicion
+        -void Start()
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- ItemArma
+    class ItemArma {
+        +float velocidadGiro
+        -void Update()
+        -void OnTriggerEnter(Collider other)
+    }
+
+    MonoBehaviour <|-- Linterna
+    class Linterna {
+        +Light linterna
+        +float intensidad
+        +Color colorLuz
+        -void Start()
+        -void Update()
+    }
+
+    MonoBehaviour <|-- NaveSalida
+    class NaveSalida {
+        +string nombreSiguienteEscena
+        -void OnTriggerEnter(Collider other)
+    }
+
+    %% --- Sonidos ---
+    MonoBehaviour <|-- AudioManager
+    class AudioManager {
+        +AudioManager Instance
+        +AudioSource fuenteMusica
+        +AudioSource fuenteSFX
+        +AudioClip musicaNormal
+        +AudioClip musicaBoss
+        -void Awake()
+        +void PonerMusicaNormal()
+        +void PonerMusicaBoss()
+        +void ReproducirSonido(AudioClip clip, float volumen = 1f)
+    }
+
+    MonoBehaviour <|-- SoundManager
+    class SoundManager {
+        +SoundManager Instance
+        +AudioClip backgroundMusic
+        +AudioClip hitSound
+        +AudioClip jumpSound
+        -AudioSource musicSource
+        -AudioSource effectsSource
+        -void Awake()
+        -void Start()
+        -void Update()
+        +void PlayBackgroundMusic()
+        +void PlayEffectSound(AudioClip clip)
+        +void PlayZoneSound(AudioClip clip, float volume)
+    }
+
+    MonoBehaviour <|-- SoundZona
+    class SoundZona {
+        +AudioClip zoneSound
+        +float zoneSoundVolume
+        -AudioSource zoneAudioSource
+        -void Start()
+        -void OnTriggerEnter(Collider other)
+        -void OnTriggerExit(Collider other)
+    }
+
+    %% --- UI ---
+    MonoBehaviour <|-- BotonCambioEscena
+    class BotonCambioEscena {
+        +string escenaDestino
+        +void IrAEscenaDestino()
+        +void CambiarDeEscena(string nombreDeLaEscena)
+        +void SalirDelJuego()
+    }
+
+    MonoBehaviour <|-- ControladorMaestroUI
+    class ControladorMaestroUI {
+        +GameObject seccionInicio
+        +GameObject seccionMenuPrincipal
+        +LoginUIController loginController
+        +GameObject panelPrincipalCentral
+        +GameObject[] panelesSecundarios
+        -void Start()
+        +void IrAlMenuPrincipal()
+        +void VolverAlInicio()
+    }
+
+    MonoBehaviour <|-- GameOver
+    class GameOver {
+        +AudioClip sonidoGameOver
+        +AudioSource audioSource
+        -void Start()
+        +void VolverAlMenu()
+    }
+
+    MonoBehaviourPunCallbacks <|-- ManejadorUIPhoton
+    class ManejadorUIPhoton {
+        +ManejadorUIPhoton Instancia
+        +GameObject panelPrincipal
+        +GameObject panelCrearUnirse
+        +GameObject panelUnirseCodigo
+        +GameObject panelSalaEspera
+        +TMP_InputField inputCodigoSala
+        +TextMeshProUGUI textoCodigoMostrado
+        +TextMeshProUGUI textoContadorJugadores
+        +TextMeshProUGUI textoListaJugadores
+        +GameObject botonEmpezarPartida
+        +TMP_Dropdown dropdownDificultad
+        -void Awake()
+        +void BotonCrearSala()
+        +void BotonConfirmarUnirse()
+        +void MostrarPanelEspera()
+        +void OnPlayerEnteredRoom(Player newPlayer)
+        +void OnPlayerLeftRoom(Player otherPlayer)
+        -void ActualizarContadorJugadores()
+        +void ClickEnEmpezarPartida()
+        -void ActualizarListaNombres()
+        +void GuardarAjustesEnRed()
+        +void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    }
+
+    MonoBehaviour <|-- LoginUIController
+    class LoginUIController {
+        +ControladorMaestroUI controladorMaestro
+        +GameObject panelInicio
+        +GameObject panelLogin
+        +GameObject panelRegistro
+        +GameObject panelCarga
+        +Button btnJugarPrincipal
+        +TMP_InputField inputLoginEmail
+        +TMP_InputField inputLoginPassword
+        +Button btnEntrar
+        +Button btnIrARegistro
+        +TMP_InputField inputRegistroApodo
+        +TMP_InputField inputRegistroEmail
+        +TMP_InputField inputRegistroPassword
+        +TMP_InputField inputRegistroConfirmarPassword
+        +Button btnRegistrar
+        +Button btnVolverLogin
+        +TextMeshProUGUI textoMensajeError
+        -void Start()
+        +void ResetearAInicio()
+        -void MostrarPanelInicio()
+        -void MostrarPanelLogin()
+        -void MostrarPanelRegistro()
+        -void ComprobarSesionGuardada()
+        -void IntentarLogin()
+        -void IntentarRegistro()
+    }
+
+    MonoBehaviour <|-- PerfilUsuarioControlador
+    class PerfilUsuarioControlador {
+        +ControladorMaestroUI controladorMaestro
+        +GameObject panelLecturaView
+        +GameObject panelEdicionView
+        +GameObject panelConfirmacionSalir
+        +Button botonAbrirConfirmacion
+        +Button botonSiSalir
+        +Button botonNoSalir
+        +TextMeshProUGUI textoNombreVista
+        +TextMeshProUGUI textoCorreoVista
+        +TMP_InputField inputNombreEdicion
+        +TMP_InputField inputCorreoEdicion
+        +RawImage fotoPerfilVista
+        +RawImage fotoMenuPrincipal
+        +Texture[] listaFotos
+        +Button botonCambiarFoto
+        -int indiceAvatarActual
+        +TextMeshProUGUI textoEstado
+        +Button botonEditar
+        +Button botonGuardar
+        -void Start()
+        -void MostrarPanelConfirmacion()
+        -void OcultarPanelConfirmacion()
+        -void EjecutarCerrarSesion()
+        +void MostrarPanelLectura()
+        +void ActivarModoEdicion()
+        -void CiclarFoto()
+        -void AplicarFotoEnPantalla(int indice)
+        -void GuardarCambiosFirebase()
+    }
+
+    MonoBehaviour <|-- ProgresoUIController
+    class ProgresoUIController {
+        +TextMeshProUGUI txtPartidasJugadas
+        +TextMeshProUGUI txtPuntuacionTotal
+        +TextMeshProUGUI txtEnemigosEliminados
+        +TextMeshProUGUI txtJefesDerrotados
+        +TextMeshProUGUI txtVecesMuerto
+        +TextMeshProUGUI txtDanoInfligido
+        +TextMeshProUGUI txtDanoRecibido
+        +TextMeshProUGUI txtDistanciaRecorrida
+        +TextMeshProUGUI txtArmasDesbloqueadas
+        -void OnEnable()
+    }
+
+    MonoBehaviour <|-- SalirJuego
+    class SalirJuego {
+        +void CerrarAplicacion()
+    }
+    </div>
+
+    <div id="mermaid-container"></div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+
+        // 1. Configuramos Mermaid
+        mermaid.initialize({ 
+            startOnLoad: false, 
+            theme: 'dark', // Tema oscuro para que combine con el fondo
+            maxTextSize: 900000 
+        });
+
+        // 2. Función principal para renderizar y añadir zoom
+        async function renderDiagram() {
+            const source = document.getElementById('mermaid-source').textContent;
+            const container = document.getElementById('mermaid-container');
+            
+            try {
+                // Renderizamos el SVG
+                const { svg } = await mermaid.render('mermaid-svg', source);
+                container.innerHTML = svg;
+
+                // Seleccionamos el SVG generado
+                const svgElement = container.querySelector('svg');
+                
+                // D3 necesita agrupar todo el contenido para escalarlo bien.
+                // Mermaid ya genera un <g> principal, lo seleccionamos:
+                const inner = d3.select(svgElement).select('g');
+                
+                // Creamos el comportamiento de Zoom y Paneo
+                const zoom = d3.zoom()
+                    .scaleExtent([0.1, 10]) // Límites de zoom (10% a 1000%)
+                    .on('zoom', (e) => {
+                        inner.attr('transform', e.transform);
+                    });
+
+                // Aplicamos el comportamiento al SVG completo
+                d3.select(svgElement).call(zoom);
+                
+                // Centramos y alejamos un poco la vista inicial para que se vea bien
+                const svgWidth = svgElement.clientWidth || window.innerWidth;
+                const svgHeight = svgElement.clientHeight || window.innerHeight;
+                d3.select(svgElement).call(zoom.translateTo, svgWidth/2, svgHeight/2);
+                d3.select(svgElement).call(zoom.scaleTo, 0.8);
+
+            } catch (error) {
+                console.error("Error renderizando Mermaid:", error);
+                container.innerHTML = `<p style="color:red; margin-top: 100px; text-align:center;">Error al generar el diagrama. Revisa la consola o asegúrate de haber pegado bien el código.</p>`;
+            }
+        }
+
+        // Ejecutamos
+        renderDiagram();
+    </script>
+</body>
+</html>
