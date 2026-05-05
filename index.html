@@ -1,1007 +1,612 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagrama de Clases Interactivo</title>
-    <style>
-        /* Estilos generales para ocupar toda la pantalla */
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; /* Ocultamos barras de scroll nativas */
-            background-color: #1e1e1e; /* Fondo oscuro moderno */
-            color: #ffffff; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        }
-        
-        /* Panel de instrucciones superior */
-        #header { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            padding: 15px; 
-            background: rgba(20, 20, 20, 0.85); 
-            backdrop-filter: blur(5px);
-            z-index: 10; 
-            text-align: center; 
-            box-sizing: border-box; 
-            border-bottom: 1px solid #333;
-        }
-        
-        #header h2 { margin: 0 0 5px 0; font-size: 20px; color: #4facfe; }
-        #header p { margin: 0; font-size: 14px; color: #aaaaaa; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gantt Real — TFG FPS Multijugador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f3f6fa;
+  --surface:  #ffffff;
+  --border:   #e4e9f0;
+  --border2:  #c9d4e0;
+  --text:     #18243a;
+  --dim:      #5a6a82;
+  --mute:     #a0aec0;
+  --weekend:  #eef1f6;
+  --we-text:  #b8c4d4;
+  --today-bg: #fff5f5;
+  --today-ln: #e53935;
 
-        /* Contenedor del diagrama */
-        #mermaid-container { 
-            width: 100vw; 
-            height: 100vh; 
-            cursor: grab; /* Cursor de "agarrar" */
-        }
-        #mermaid-container:active { cursor: grabbing; } /* Cursor cerrado al arrastrar */
-        
-        /* Aseguramos que el SVG pueda crecer libremente */
-        svg { max-width: none !important; max-height: none !important; width: 100%; height: 100%; }
-    </style>
+  /* Group colours */
+  --r01:  #1d6feb; --r01-l: #dbeafe;
+  --r02:  #7c3aed; --r02-l: #ede9fe;
+  --r03:  #d4460a; --r03-l: #ffedd5;
+  --doc:  #b45309; --doc-l: #fef3c7;
+  --tst:  #157a40; --tst-l: #dcfce7;
+  --end:  #c53030; --end-l: #fee2e2;
+  --mem:  #0e7490; --mem-l: #cffafe;
+
+  --col-w:  22px;
+  --row-h:  34px;
+  --lbl-w:  300px;
+  --grp-w:  52px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
+
+/* ─ Header ─────────────────────────────────────────────────────────────── */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 14px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hdr-l .eye{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.8px;color:var(--r01);text-transform:uppercase;margin-bottom:4px}
+.hdr-l h1{font-size:21px;font-weight:600;letter-spacing:-.3px}
+.hdr-l h1 em{color:var(--r01);font-style:normal}
+.hdr-l .sub{font-size:11.5px;color:var(--dim);margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:2px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);font-weight:500}
+.ld{width:9px;height:9px;border-radius:2px}
+
+/* ─ Stats ───────────────────────────────────────────────────────────────── */
+.stats{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.si{padding:9px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:1px}
+.sv{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:var(--r01)}
+.sl{font-size:9.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.7px}
+
+/* ─ Controls ────────────────────────────────────────────────────────────── */
+.ctrl{background:#f9fafc;border-bottom:1px solid var(--border);padding:7px 14px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.cl{font-family:'DM Mono',monospace;font-size:9px;color:var(--mute);letter-spacing:1px;text-transform:uppercase;margin-right:2px}
+.btn{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.5px;padding:4px 11px;border:1px solid var(--border2);background:var(--surface);color:var(--dim);cursor:pointer;border-radius:4px;transition:all .15s;text-transform:uppercase}
+.btn:hover{border-color:var(--r01);color:var(--r01);background:var(--r01-l)}
+.btn.on{border-color:var(--r01);color:var(--r01);background:var(--r01-l);font-weight:500}
+.divr{width:1px;height:18px;background:var(--border);margin:0 3px}
+
+/* ─ Layout ──────────────────────────────────────────────────────────────── */
+.outer{overflow-x:auto;overflow-y:visible;position:relative}
+.wrap{display:flex;min-width:max-content}
+
+/* Fixed left panel */
+.fp{flex-shrink:0;width:calc(var(--lbl-w) + var(--grp-w));position:sticky;left:0;z-index:30;background:var(--surface);border-right:2px solid var(--border2);box-shadow:2px 0 8px rgba(0,0,0,.07)}
+.fp-hdr{height:calc(var(--row-h)*3);display:flex;align-items:flex-end;border-bottom:2px solid var(--border2);background:#f7f9fc;padding:0 0 7px}
+.fh-lbl{width:var(--lbl-w);padding-left:10px;font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mute);text-transform:uppercase;letter-spacing:1px}
+.fh-grp{width:var(--grp-w);text-align:center;font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mute);text-transform:uppercase;letter-spacing:1px}
+
+.fp-row{height:var(--row-h);display:flex;align-items:center;border-bottom:1px solid var(--border)}
+.fp-row.ph{background:#f7f9fc}
+.fp-row.alt{background:#fcfdff}
+.fp-lbl{width:var(--lbl-w);padding:0 8px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.fp-lbl.ph{font-weight:600;font-size:12px}
+.fp-lbl.sub{font-size:11.5px;color:var(--dim);padding-left:22px}
+.fp-meta{width:var(--grp-w);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.fp-grp{font-family:'DM Mono',monospace;font-size:9px;font-weight:500}
+
+/* Scroll area */
+.sa{flex:1;min-width:0;position:relative}
+.day-hdr{position:sticky;top:0;z-index:20;border-bottom:2px solid var(--border2);background:#f7f9fc;display:flex;flex-direction:column}
+.hrow{display:flex}
+.hrow.mrow{border-bottom:1px solid var(--border)}
+.hrow.wrow{border-bottom:1px solid var(--border)}
+
+.hm{display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:9.5px;font-weight:500;letter-spacing:1px;text-transform:uppercase;border-right:2px solid rgba(255,255,255,.35);flex-shrink:0;height:calc(var(--row-h)*1)}
+.hw{display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:8.5px;color:var(--dim);border-right:1px solid var(--border);flex-shrink:0;height:calc(var(--row-h)*1)}
+.hd{width:var(--col-w);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid var(--border);height:calc(var(--row-h)*1);gap:1px}
+.hd.we{background:var(--weekend)}
+.hd.tod{background:var(--today-bg)}
+.dn{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;color:var(--dim)}
+.dw{font-size:7.5px;color:var(--mute);text-transform:uppercase}
+.hd.we .dn{color:var(--we-text)}
+.hd.tod .dn{color:var(--today-ln);font-weight:700}
+
+/* Chart rows */
+.cr{height:var(--row-h);display:flex;position:relative;border-bottom:1px solid var(--border)}
+.cr.ph{background:#f7f9fc}
+.cr.alt{background:#fcfdff}
+.dc{width:var(--col-w);flex-shrink:0;height:100%;border-right:1px solid var(--border);position:relative}
+.dc.we{background:var(--weekend)}
+.dc.tod{background:var(--today-bg)}
+.dc.tod::before{content:'';position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--today-ln);opacity:.4}
+
+/* Bars */
+.bar{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:3px;display:flex;align-items:center;overflow:hidden;cursor:pointer;transition:filter .15s,transform .15s;z-index:5}
+.bar:hover{filter:brightness(.88) saturate(1.15);transform:translateY(-50%) scaleY(1.12);z-index:10}
+.bar.ph-bar{height:7px;opacity:.35;border-radius:2px;pointer-events:none}
+.bar-lbl{position:absolute;left:5px;font-size:8.5px;font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 8px);font-weight:500;pointer-events:none;color:#fff}
+
+/* Today line */
+.tl{position:absolute;top:0;bottom:0;width:2px;background:var(--today-ln);z-index:15;pointer-events:none}
+.tt-tag{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:var(--today-ln);color:#fff;font-family:'DM Mono',monospace;font-size:7.5px;padding:2px 5px;border-radius:3px;white-space:nowrap;letter-spacing:.5px}
+
+/* Deadline line */
+.dl-line{position:absolute;top:0;bottom:0;width:2px;background:#f59e0b;z-index:14;pointer-events:none}
+.dl-tag{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#fff;font-family:'DM Mono',monospace;font-size:7.5px;padding:2px 5px;border-radius:3px;white-space:nowrap;letter-spacing:.5px}
+
+/* Tooltip */
+.tt{position:fixed;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:999;max-width:290px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.13)}
+.tt-ttl{font-weight:600;font-size:12px;margin-bottom:5px;color:var(--text)}
+.tt-r{display:flex;justify-content:space-between;gap:14px;margin-top:2px}
+.tt-k{color:var(--mute);font-size:10.5px}
+.tt-v{color:var(--dim);font-size:10.5px;font-family:'DM Mono',monospace}
+.tt-note{margin-top:7px;font-size:10.5px;color:var(--dim);line-height:1.5;border-top:1px solid var(--border);padding-top:7px}
+.tt-status{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9.5px;font-family:'DM Mono',monospace;font-weight:500;margin-bottom:5px}
+
+/* Bottom */
+.bot{background:var(--surface);border-top:1px solid var(--border);padding:9px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--dim)}
+.we-sw{width:13px;height:13px;border-radius:2px;background:var(--weekend);border:1px solid var(--border2)}
+.bot-item{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9.5px;color:var(--mute)}
+</style>
 </head>
 <body>
 
-    <div id="header">
-        <h2>Diagrama de Clases del Videojuego 3D</h2>
-    </div>
-    
-    <div id="mermaid-source" style="display: none;">
-classDiagram
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="eye">TFG · DAM Presencial · Pablo Pérez Cantó · Gantt Real</div>
+    <h1>Diagrama de Gantt <em>Real</em></h1>
+    <div class="sub">Videojuego FPS Multijugador 3D — Unity · Firebase · PUN2 · Feb 2025 – Jun 2025</div>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
 
-    %% --- Enemigos ---
-    MonoBehaviourPun <|-- Atropello
-    class Atropello {
-        +float velocidadMinimaParaMatar
-        +float dañoAtropello
-        +AudioClip sonidoChoque
-        +GameObject efectoSangre
-        -void OnCollisionEnter(Collision collision)
-        -void MostrarEfectosAtropello(Vector3 puntoContacto)
+<div class="stats" id="stats"></div>
+
+<div class="ctrl">
+  <span class="cl">Filtro:</span>
+  <button class="btn on" onclick="setF('all')">Todo</button>
+  <button class="btn" id="fb-R01" onclick="setF('R01')">R01 Firebase</button>
+  <button class="btn" id="fb-R02" onclick="setF('R02')">R02 PUN2</button>
+  <button class="btn" id="fb-R03" onclick="setF('R03')">R03 Diseño</button>
+  <button class="btn" id="fb-MEM" onclick="setF('MEM')">Memoria</button>
+  <div class="divr"></div>
+  <span class="cl">Zoom:</span>
+  <button class="btn on" id="zb-md" onclick="setZ(22)">Normal</button>
+  <button class="btn" id="zb-sm" onclick="setZ(15)">Mini</button>
+  <button class="btn" id="zb-lg" onclick="setZ(30)">Grande</button>
+</div>
+
+<div class="outer" id="outer">
+  <div class="wrap" id="wrap">
+    <div class="fp" id="fp"></div>
+    <div class="sa" id="sa"></div>
+  </div>
+</div>
+
+<div class="bot">
+  <div class="bot-item"><div class="we-sw"></div> Fin de semana</div>
+  <div class="bot-item" style="color:var(--today-ln)">│ Hoy</div>
+  <div class="bot-item" style="color:#f59e0b">│ Entrega memoria (5 mayo)</div>
+</div>
+
+<div class="tt" id="tt"></div>
+
+<script>
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const D  = (y,m,day) => new Date(y,m-1,day);
+const add = (dt,n)  => { let x=new Date(dt); x.setDate(x.getDate()+n); return x; };
+const idx = dt => Math.round((dt - RANGE_START)/86400000);
+const isWE= dt => { const d=dt.getDay(); return d===0||d===6; };
+const DOW = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+const MON = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const MCLR= ['#1d6feb','#1d6feb','#7c3aed','#d4460a','#0e7490','#157a40','#0891b2'];
+const mclr= m => MCLR[m-1]||'#64748b';
+const fmt = dt => dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+
+// ─── Date range ──────────────────────────────────────────────────────────────
+const RANGE_START  = D(2025,2,3);   // 3 febrero (first real work day)
+const RANGE_END    = D(2025,6,6);   // 6 junio – presentación estimada
+const DEADLINE     = D(2025,5,5);   // 5 mayo – entrega memoria
+
+const ALL_DAYS = [];
+for(let c=new Date(RANGE_START); c<=RANGE_END; c=add(c,1)) ALL_DAYS.push(new Date(c));
+const TOTAL = ALL_DAYS.length;
+
+const today    = new Date();
+const todayIdx = idx(today);
+const deadIdx  = idx(DEADLINE);
+
+// ─── Colors ──────────────────────────────────────────────────────────────────
+const C = {
+  R01:{dark:'#1d6feb',light:'#dbeafe'},
+  R02:{dark:'#7c3aed',light:'#ede9fe'},
+  R03:{dark:'#d4460a',light:'#ffedd5'},
+  MEM:{dark:'#b45309',light:'#fef3c7'},
+  TST:{dark:'#157a40',light:'#dcfce7'},
+  END:{dark:'#c53030',light:'#fee2e2'},
+};
+
+// ─── Status helpers ──────────────────────────────────────────────────────────
+// status: 'done'=completado, 'prog'=en progreso, 'pend'=pendiente futuro
+const SC = {
+  done:{bg:'#dcfce7',border:'#16803c',label:'✓ Hecho',   text:'#16803c'},
+  prog:{bg:'#dbeafe',border:'#1d6feb',label:'⟳ En curso',text:'#1d6feb'},
+  pend:{bg:'#f3f4f6',border:'#9ca3af',label:'○ Pendiente',text:'#6b7280'},
+};
+
+// ─── Task data ───────────────────────────────────────────────────────────────
+// Fields: label, group, c (color key), s [y,m,d], e [y,m,d],
+//         p (progress 0-100), status ('done'|'prog'|'pend'),
+//         h (hours), note, isPhase, children[]
+
+const RAW = [
+
+  // ══════════════════════════════════════════════════════════════════════
+  // MEMORIA / DOCUMENTACIÓN
+  // ══════════════════════════════════════════════════════════════════════
+  { id:'mem', label:'MEM · Memoria y Documentación', group:'MEM', c:'MEM',
+    s:[2025,2,3], e:[2025,5,5], h:'~40h total', isPhase:true,
+    note:'Redacción paralela al desarrollo del proyecto.',
+    children:[
+      { label:'Índices y estructura de la memoria',       group:'MEM',c:'MEM',s:[2025,2,3], e:[2025,2,7],  h:'3h',
+        note:'Organización de secciones, títulos y subtítulos.' },
+      { label:'§5 Justificación del proyecto',            group:'MEM',c:'MEM',s:[2025,2,3], e:[2025,2,10], h:'4h',
+        note:'Motivación principal y estado de la cuestión.' },
+      { label:'§6 Introducción y alcance',                group:'MEM',c:'MEM',s:[2025,2,5], e:[2025,2,12], h:'3h',
+        note:'Descripción general, alcance y problemas que resuelve.' },
+      { label:'§7 Objetivos RFTP + Casos de uso',         group:'MEM',c:'MEM',s:[2025,2,7], e:[2025,2,14], h:'4h',
+        note:'Requisitos funcionales/técnicos, diagrama casos de uso.' },
+      { label:'Diagrama E/R en drawio',                   group:'MEM',c:'MEM',s:[2025,2,10],e:[2025,2,18], h:'3h',
+        note:'Tablas, atributos y relaciones.' },
+      { label:'Sección tecnología y arquitectura',        group:'MEM',c:'MEM',s:[2025,2,14],e:[2025,2,25], h:'4h',
+        note:'Descripción técnica, dependencias y arquitectura del sistema.' },
+      { label:'Documentar R01 – Firebase',                group:'MEM',c:'MEM',s:[2025,3,3], e:[2025,3,10], h:'3h',
+        note:'Capturas, scripts y explicación de la integración con Firebase.' },
+      { label:'Documentar R02 – PUN2 multijugador',       group:'MEM',c:'MEM',s:[2025,3,10],e:[2025,3,21], h:'4h',
+        note:'Capturas, flujo de red, código y decisiones de diseño.' },
+      { label:'Documentar R03 – Niveles y diseño',        group:'MEM',c:'MEM',s:[2025,3,28],e:[2025,4,21], h:'6h',
+        note:'Avance del 28/03, 21/04 y 02/05 documentando niveles, assets y mecánicas.' },
+      { label:'Presupuesto, metodologías y referencias',  group:'MEM',c:'MEM',s:[2025,4,22],e:[2025,4,30], h:'4h',
+        note:'Presupuesto, licencias, referencias APA.' },
+      { label:'Revisión final y entrega memoria',         group:'MEM',c:'MEM',s:[2025,5,2], e:[2025,5,5],  h:'3h',
+        note:'Revisión completa, links internos, índice, formato. ⚠ ENTREGA 5 MAYO' },
+    ]},
+
+  // ══════════════════════════════════════════════════════════════════════
+  // R01 – BASE DE DATOS (FIREBASE)
+  // ══════════════════════════════════════════════════════════════════════
+  { id:'r01', label:'R01 · Base de Datos (Firebase)', group:'R01', c:'R01',
+    s:[2025,2,3], e:[2025,3,5], h:'~22h total', isPhase:true,
+    note:'Configuración, diseño y autenticación completados.',
+    children:[
+      { label:'R01F01 – Crear proyecto Firebase y config. inicial', group:'R01',c:'R01',s:[2025,2,3],e:[2025,2,7],  h:'4h',
+        note:'Proyecto Firebase, registro app, google-services.json, SDK importado en Unity.' },
+      { label:'R01F02 – Diseño E/R y colecciones Firestore',        group:'R01',c:'R01',s:[2025,2,7],e:[2025,2,14], h:'4h',
+        note:'Tablas, atributos, relaciones, JSON generado para Firebase.' },
+      { label:'R01F03 – Scripts Firebase (Auth, DB, Manager)',       group:'R01',c:'R01',s:[2025,2,14],e:[2025,2,25],h:'6h',
+        note:'authManager.cs, FirebaseManager.cs, BaseDeDatosManager.cs.' },
+      { label:'R01F03 – IU registro e inicio de sesión',            group:'R01',c:'R01',s:[2025,2,25],e:[2025,3,2], h:'4h',
+        note:'Panel login, panel registro, gestión de errores en UI.' },
+      { label:'R01F03 – Login Google + datos armas/niveles en BD',  group:'R01',c:'R01',s:[2025,3,2],e:[2025,3,5],  h:'4h',
+        note:'02/03: usuarios registran/inician sesión. Datos básicos armas y niveles en Firebase.' },
+    ]},
+
+  // ══════════════════════════════════════════════════════════════════════
+  // R02 – MULTIJUGADOR (PUN2)
+  // ══════════════════════════════════════════════════════════════════════
+  { id:'r02', label:'R02 · Plataforma Multijugador (PUN2)', group:'R02', c:'R02',
+    s:[2025,3,3], e:[2025,3,6], h:'~20h total', isPhase:true,
+    note:'Lobby, salas, sincronización de movimiento y animaciones completados.',
+    children:[
+      { label:'R02F01 – Investigación PUN2 + cuenta y app Photon',   group:'R02',c:'R02',s:[2025,3,3],e:[2025,3,4],h:'3h',
+        note:'Importar de Asset Store, cuenta Photon, nueva app PUN2, App ID en proyecto.' },
+      { label:'R02F01 – IU lobby: menú, crear/unirse, sala',         group:'R02',c:'R02',s:[2025,3,3],e:[2025,3,4],h:'4h',
+        note:'Panel menú, panel crear/unirse con código, panel sala. Funcional con código aleatorio.' },
+      { label:'R02F01 – Prueba sala con 2 ejecutables',              group:'R02',c:'TST',s:[2025,3,3],e:[2025,3,4],h:'1h',
+        note:'Verificado: 2 clientes entran a la misma sala.' },
+      { label:'R02F02 – Personaje 3D animado desde Mixamo',          group:'R02',c:'R02',s:[2025,3,4],e:[2025,3,5],h:'4h',
+        note:'04/03: asset 3D buscado, animaciones Mixamo, script movimiento y cámara.' },
+      { label:'R02F02 – Sincronización movimiento y animaciones',    group:'R02',c:'R02',s:[2025,3,5],e:[2025,3,6],h:'4h',
+        note:'05/03: animaciones de compañeros visibles en juego. Errores Photon corregidos.' },
+      { label:'R02F02 – NickName Firebase ↔ PUN2 + lista jugadores', group:'R02',c:'R02',s:[2025,3,4],e:[2025,3,5],h:'2h',
+        note:'Photon.network.NickName para acceder al nombre de cada usuario de Firebase.' },
+    ]},
+
+  // ══════════════════════════════════════════════════════════════════════
+  // R03 – DISEÑO: NIVEL 2, UI, PERSONAJES, ARMAS
+  // ══════════════════════════════════════════════════════════════════════
+  { id:'r03', label:'R03 · Diseño Niveles, Assets y Mecánicas', group:'R03', c:'R03',
+    s:[2025,2,3], e:[2025,5,2], h:'~75h total', isPhase:true,
+    note:'Nivel 2, UI, personajes, armas y mecánicas completados.',
+    children:[
+
+      // ── Nivel 2 ──
+      { label:'R03F01 – Escena nivel 2: túnel + isla',               group:'R03',c:'R03',s:[2025,2,3], e:[2025,2,14],h:'8h',
+        note:'Creación nivel 2: assets, colliders, spawn enemigos/botiquines, iluminación.' },
+      { label:'R03F01 – Coche: movimiento + atropello enemigos',     group:'R03',c:'R03',s:[2025,2,14],e:[2025,2,21],h:'5h',
+        note:'Personaje puede entrar en el coche, coche puede atropellar enemigos.' },
+      { label:'R03F01 – Decoración: tuberías, electricidad, coches', group:'R03',c:'R03',s:[2025,2,21],e:[2025,2,28],h:'4h',
+        note:'28/02: decoración túnel, colliders isla 2, enemigos en túnel, game manager nivel 2.' },
+      { label:'R03F01 – Game Manager 2 + spawns completos',          group:'R03',c:'R03',s:[2025,2,28],e:[2025,3,3], h:'3h',
+        note:'Script GameManager2, spawn enemigos y botiquines, interfaz de usuario del nivel.' },
+      { label:'R03F01 – Correcciones nivel 2 (21/04)',               group:'R03',c:'R03',s:[2025,4,7], e:[2025,4,21],h:'5h',
+        note:'Tamaño personaje, interior túnel, fondo nivel 2, cristales camiones, montañas laterales.' },
+      { label:'R03F01 – Decoración final: montañas y detalles',      group:'R03',c:'R03',s:[2025,4,28],e:[2025,5,2], h:'3h',
+        note:'02/05: montañas decorativas, bordes texto puntos y muertos.' },
+
+      // ── UI e interfaces ──
+      { label:'R03F03 – IU panel inicio sesión y registro',          group:'R03',c:'R03',s:[2025,2,25],e:[2025,3,2], h:'3h',
+        note:'28/02: panel de inicio de sesión y panel de registro.' },
+      { label:'R03F03 – Perfil jugador (nombre, foto, estadísticas)',group:'R03',c:'R03',s:[2025,3,5], e:[2025,3,7], h:'5h',
+        note:'05-06/03: IU perfil con foto (array 6), nombre y correo editables (UPDATE BD), cerrar sesión.' },
+      { label:'R03F03 – Pantalla principal (Start Cuenta)',           group:'R03',c:'R03',s:[2025,3,10],e:[2025,3,11],h:'2h',
+        note:'10/03: comprueba si tiene cuenta al iniciar. Redirige al menú o a login.' },
+      { label:'R03F03 – Panel estadísticas (acceso a BD)',           group:'R03',c:'R03',s:[2025,3,10],e:[2025,3,11],h:'2h',
+        note:'10/03: panel estadísticas, accede a BD, botón en menú principal.' },
+      { label:'R03F03 – Panel config en menú (brillo, vol, res…)',  group:'R03',c:'R03',s:[2025,3,6], e:[2025,3,7], h:'3h',
+        note:'06/03: ajustes con brillo, volumen, resolución, modo de juego.' },
+      { label:'R03F03 – Dropdown dificultad + sistema herido',       group:'R03',c:'R03',s:[2025,3,28],e:[2025,4,1], h:'6h',
+        note:'28/03: dropdown dificultad (fácil/medio/difícil/imposible). Sistema de revivir compañeros caídos.' },
+      { label:'R03F03 – Arreglos UI: fondo, inventario, sprites',    group:'R03',c:'R03',s:[2025,4,1], e:[2025,4,2], h:'4h',
+        note:'01/04: nuevo fondo UI, mejora inventario, arreglo conexiones y sprites de botones.' },
+      { label:'R03F03 – Pulido final de interfaz',                   group:'R03',c:'R03',s:[2025,4,22],e:[2025,4,25],h:'3h',
+        note:'Revisión y pulido visual de toda la interfaz del juego.' },
+
+      // ── Personajes y sincronización ──
+      { label:'R03F04 – Personaje 3D + animaciones Mixamo',          group:'R03',c:'R03',s:[2025,3,4], e:[2025,3,6], h:'5h',
+        note:'Asset 3D con animaciones, script movimiento, cámara. Funcional en multijugador.' },
+      { label:'R03F04 – Skins y personajes funcionales nivel 2',     group:'R03',c:'R03',s:[2025,4,7], e:[2025,4,8], h:'2h',
+        note:'07/04: skins y personajes funcionales ya en nivel 2.' },
+
+      // ── Armas ──
+      { label:'R03F05 – Armas: assets, scripts, sonidos, daños',     group:'R03',c:'R03',s:[2025,3,4], e:[2025,3,6], h:'4h',
+        note:'04/03: arreglo errores armas. Sangre, granada. Armas funcionales en multijugador.' },
+      { label:'R03F05 – Recoil y ajuste final de armas',             group:'R03',c:'R03',s:[2025,4,25],e:[2025,4,30],h:'3h',
+        note:'Recoil más realista, ajuste de daños y sonidos finales de armas.' },
+
+      // ── Enemigos y boss ──
+      { label:'R03F01 – Boss: vida, spawn y arreglos (10/03)',       group:'R03',c:'R03',s:[2025,3,10],e:[2025,3,11],h:'2h',
+        note:'Boss aparece con vida completa. Arreglado correctamente.' },
+      { label:'R03F01 – Guardar estadísticas en Firebase (18/03)',   group:'R03',c:'TST',s:[2025,3,18],e:[2025,3,19],h:'3h',
+        note:'Arreglado guardado de estadísticas de partida en Firebase.' },
+      { label:'R03F01 – Testeo 4 jugadores + correcciones (07/04)',  group:'R03',c:'TST',s:[2025,4,7], e:[2025,4,8], h:'5h',
+        note:'07/04: testeo para 4 jugadores, revisión errores, coche funcional, GameManager2 arreglado.' },
+      { label:'R03F01 – Enemigos dejan de disparar si "tirado"',     group:'R03',c:'R03',s:[2025,4,7], e:[2025,4,8], h:'1h',
+        note:'Si el jugador está caído, los enemigos no le disparan. No puede mover cámara en el suelo.' },
+
+      // ── NUnit ──
+      { label:'R03F06 – NUnit: investigar + pruebas BD',             group:'R03',c:'TST',s:[2025,4,28],e:[2025,5,2], h:'5h',
+        note:'Investigar NUnit, aplicar en Unity, pruebas automáticas para base de datos y lógica.' },
+
+      // ── GitHub ──
+      { label:'GitHub: .gitignore + subir proyecto',                  group:'MEM',c:'MEM',s:[2025,4,1], e:[2025,4,2], h:'1h',
+        note:'Añadido .gitignore, proyecto subido a GitHub.' },
+    ]},
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LIMPIEZA Y ENTREGA FINAL
+  // ══════════════════════════════════════════════════════════════════════
+  { id:'fin', label:'FIN · Limpieza, Revisión y Presentación', group:'MEM', c:'END',
+    s:[2025,4,28], e:[2025,6,6], h:'~15h total', isPhase:true,
+    note:'Limpieza de código, README, manual, correcciones y presentación.',
+    children:[
+      { label:'Limpieza de código y comentarios',          group:'MEM',c:'MEM',s:[2025,4,28],e:[2025,5,2], h:'3h',
+        note:'Refactorizar y comentar el código. (09/03 se hizo una primera limpieza.)' },
+      { label:'Manual de ejecución e instalación',         group:'MEM',c:'MEM',s:[2025,4,29],e:[2025,5,2], h:'3h',
+        note:'Redactar manual de instalación y ejecución del juego.' },
+      { label:'Añadir juego a ItchIO',                     group:'MEM',c:'MEM',s:[2025,5,2], e:[2025,5,4], h:'2h',
+        note:'Publicar build en ItchIO para acceso online.' },
+      { label:'README completo en GitHub',                 group:'MEM',c:'MEM',s:[2025,5,2], e:[2025,5,4], h:'2h',
+        note:'Redactar README completo con instrucciones, capturas y descripción.' },
+      { label:'Revisión general memoria + correcciones',   group:'MEM',c:'MEM',s:[2025,5,5], e:[2025,5,16],h:'4h',
+        note:'Correcciones de estilo, formato, links, revisión de índices.' },
+      { label:'Preparación presentación TFG',              group:'MEM',c:'END',s:[2025,5,19],e:[2025,5,30],h:'4h',
+        note:'Preparar diapositivas y ensayar la defensa del TFG.' },
+      { label:'Presentación TFG',                          group:'MEM',c:'END',s:[2025,5,26],e:[2025,6,6], h:'—',
+        note:'Defensa del TFG ante el tribunal evaluador. Finales de mayo o principios de junio.' },
+    ]},
+];
+
+// ─── Normalize ───────────────────────────────────────────────────────────────
+function norm(t){
+  return {...t, start:D(...t.s), end:D(...t.e), color:C[t.c]};
+}
+const PHASES = RAW.map(p=>({...norm(p), children:(p.children||[]).map(norm)}));
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let activeF = 'all';
+
+function buildRows(){
+  const rows=[];
+  PHASES.forEach(ph=>{
+    const kids = ph.children.filter(ch => activeF==='all' || ch.group===activeF);
+    if(kids.length===0 && activeF!=='all') return;
+    rows.push({...ph, isPhase:true});
+    kids.forEach(ch=>rows.push({...ch, isPhase:false}));
+  });
+  return rows;
+}
+
+// ─── Fixed panel ─────────────────────────────────────────────────────────────
+function buildFP(rows){
+  const fp=document.getElementById('fp');
+  let h=`<div class="fp-hdr"><div class="fh-lbl">Tarea</div><div class="fh-grp">Grupo</div></div>`;
+  rows.forEach((row,i)=>{
+    const bg = row.isPhase?'ph':(i%2===0?'':'alt');
+    h+=`<div class="fp-row ${bg}">
+      <div class="fp-lbl ${row.isPhase?'ph':'sub'}" title="${row.label}">
+        <span style="color:${row.color.dark};font-size:${row.isPhase?'9':'7'}px;flex-shrink:0">${row.isPhase?'▶':'·'}</span>
+        ${row.label}
+      </div>
+      <div class="fp-meta"><span class="fp-grp" style="color:${row.color.dark}">${row.group}</span></div>
+    </div>`;
+  });
+  fp.innerHTML=h;
+}
+
+// ─── Scroll area ─────────────────────────────────────────────────────────────
+function buildSA(rows){
+  const cw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--col-w'));
+  const tw=TOTAL*cw;
+
+  // Month header
+  let mHtml=''; let ms=0; let cm=ALL_DAYS[0].getMonth();
+  for(let i=1;i<=ALL_DAYS.length;i++){
+    if(i===ALL_DAYS.length||ALL_DAYS[i].getMonth()!==cm){
+      const span=i-ms; const w=span*cw;
+      mHtml+=`<div class="hm" style="width:${w}px;background:${mclr(cm+1)};color:#fff">${MON[cm]} 2025</div>`;
+      if(i<ALL_DAYS.length){ms=i;cm=ALL_DAYS[i].getMonth();}
+    }
+  }
+
+  // Week header
+  let wHtml='';
+  for(let i=0;i<ALL_DAYS.length;){
+    let j=i;
+    while(j<ALL_DAYS.length && ALL_DAYS[j].getDay()!==6) j++;
+    if(j<ALL_DAYS.length) j++;
+    const span=j-i; const w=span*cw;
+    const dt=ALL_DAYS[i];
+    const jan1=new Date(dt.getFullYear(),0,1);
+    const iw=Math.ceil(((dt-jan1)/86400000+jan1.getDay()+1)/7);
+    wHtml+=`<div class="hw" style="width:${w}px">Sem ${iw}</div>`;
+    i=j;
+  }
+
+  // Day header
+  let dHtml='';
+  ALL_DAYS.forEach((dt,i)=>{
+    const we=isWE(dt); const tod=(i===todayIdx);
+    dHtml+=`<div class="hd ${we?'we':''} ${tod?'tod':''}" style="width:${cw}px">
+      <span class="dn">${dt.getDate()}</span>
+      <span class="dw">${DOW[dt.getDay()]}</span>
+    </div>`;
+  });
+
+  // Rows
+  let rHtml='';
+  rows.forEach((row,ri)=>{
+    const bg=row.isPhase?'ph':(ri%2===0?'':'alt');
+    let cells='';
+    ALL_DAYS.forEach((dt,i)=>{
+      const we=isWE(dt); const tod=(i===todayIdx);
+      cells+=`<div class="dc ${we?'we':''} ${tod?'tod':''}"></div>`;
+    });
+
+    // Bar
+    let bar='';
+    const si=idx(row.start), ei=idx(row.end);
+    if(si<=TOTAL && ei>=0){
+      const left=Math.max(si,0)*cw+1;
+      const w=Math.max((Math.min(ei,TOTAL-1)-Math.max(si,0)+1)*cw-2,4);
+      const cl=row.color;
+      const tip=JSON.stringify({
+        label:row.label,start:fmt(row.start),end:fmt(row.end),
+        dur:`${ei-si+1} días`,h:row.h||'—',note:row.note||''
+      }).replace(/"/g,'&quot;');
+
+      if(row.isPhase){
+        bar=`<div class="bar ph-bar" style="left:${left}px;width:${w}px;background:${cl.dark};border:1px solid ${cl.dark}"></div>`;
+      } else {
+        bar=`<div class="bar"
+          style="left:${left}px;width:${w}px;background:${cl.dark};border:1.5px solid ${cl.dark}"
+          data-tip="${tip}" onmouseenter="showTT(event,this)" onmouseleave="hideTT()">
+          <span class="bar-lbl">${row.label.replace(/^[^·–]*[·–]\s*/,'').substring(0,28)}</span>
+        </div>`;
+      }
     }
 
-    MonoBehaviourPun <|-- BossIA
-    class BossIA {
-        +float vidaMaxima
-        +float vidaActual
-        +int puntosBoss
-        -bool estaMuerto
-        +Transform player
-        +float velocidadBoss
-        +float distanciaMinima
-        +GameObject prefabBolaFuego
-        +Transform puntoDisparo
-        +float cadenciaDisparo
-        +AudioClip sonidoAtaque
-        -float tiempoSiguienteDisparo
-        +Animator animator
-        -void Awake()
-        -void Start()
-        -void Update()
-        -void DispararFuego()
-        +void RecibirDañoBoss(float cantidad, PhotonMessageInfo info)
-        -void MorirBoss(bool fueMio)
+    // Today + deadline lines
+    let lines='';
+    if(todayIdx>=0&&todayIdx<TOTAL){
+      lines+=`<div class="tl" style="left:${todayIdx*cw+cw/2}px">${ri===0?'<div class="tt-tag">HOY</div>':''}</div>`;
+    }
+    if(deadIdx>=0&&deadIdx<TOTAL){
+      lines+=`<div class="dl-line" style="left:${deadIdx*cw+cw/2}px">${ri===0?'<div class="dl-tag">ENTREGA</div>':''}</div>`;
     }
 
-    MonoBehaviour <|-- Cercano
-    class Cercano {
-        +Transform player
-        +Animator animator
-        +int vive
-        +float activationRange
-        +float stopRange
-        +float speed
-        +float distanciaAtaque
-        -bool active
-        -void Start()
-        -void Update()
-        -void OnCollisionEnter(Collision other)
-        +void Morir()
-        -void OnDrawGizmosSelected()
-    }
+    rHtml+=`<div class="cr ${bg}" style="width:${tw}px">${cells}${bar}${lines}</div>`;
+  });
 
-    MonoBehaviourPun <|-- PatrulleroTirador
-    class PatrulleroTirador {
-        +int vive
-        +Animator animator
-        +Transform player
-        +float chaseSpeed
-        +float distanciaDisparo
-        +GameObject bulletPrefab
-        +Transform shootPoint
-        +float fireRate
-        +float bulletSpeed
-        +AudioClip sonidoDisparo
-        -float fireCooldown
-        -NavMeshAgent agent
-        -void Start()
-        -void Update()
-        -void BuscarJugadorMasCercano()
-        -void ComportamientoCombate(float distancia)
-        -void Disparar()
-        -void EfectosDisparoRed(Vector3 posicion, Vector3 direccion)
-        +void Morir()
-        -void OnDrawGizmosSelected()
-    }
+  document.getElementById('sa').innerHTML=`
+    <div class="day-hdr" style="width:${tw}px">
+      <div class="hrow mrow">${mHtml}</div>
+      <div class="hrow wrow">${wHtml}</div>
+      <div class="hrow">${dHtml}</div>
+    </div>${rHtml}`;
+}
 
-    MonoBehaviour <|-- patruyero
-    class patruyero {
-        +Transform[] puntos
-        +float patrolSpeed
-        +float distanciaMinima
-        +Transform player
-        +float chaseSpeed
-        +float detectionRange
-        +float loseRange
-        +float rotateSpeed
-        -void Update()
-        -void Patrullar()
-        -void Perseguir()
-        -void RotarHacia(Vector3 direccion)
-    }
+// ─── Stats ───────────────────────────────────────────────────────────────────
+function buildStats(){
+  const tasks=PHASES.flatMap(p=>p.children);
+  const wdays=ALL_DAYS.filter(d=>!isWE(d)).length;
+  const todStr=todayIdx>=0&&todayIdx<TOTAL?`Día ${todayIdx+1}`:(todayIdx<0?'Antes del inicio':'Terminado');
+  document.getElementById('stats').innerHTML=`
+    <div class="si"><div class="sv">${tasks.length}</div><div class="sl">Tareas</div></div>
+    <div class="si"><div class="sv">${PHASES.length}</div><div class="sl">Fases</div></div>
+    <div class="si"><div class="sv">${ALL_DAYS.length}</div><div class="sl">Días totales</div></div>
+    <div class="si"><div class="sv">${wdays}</div><div class="sl">Días laborables</div></div>
+    <div class="si" style="margin-left:auto;border-right:none;border-left:1px solid var(--border)">
+      <div class="sv" style="color:var(--today-ln)">${todStr}</div><div class="sl">Hoy (${fmt(today)})</div>
+    </div>`;
+}
 
-    MonoBehaviour <|-- SeguirSimple
-    class SeguirSimple {
-        +Transform player
-        +Animator animator
-        +int vive
-        +float MoveSpeed
-        +float distanciaAtaque
-        -void Start()
-        -void Update()
-        -void OnCollisionEnter(Collision other)
-        +void Morir()
-    }
+// ─── Legend ──────────────────────────────────────────────────────────────────
+function buildLegend(){
+  const items=[
+    ['R01 Firebase',C.R01.dark],['R02 PUN2',C.R02.dark],
+    ['R03 Diseño',C.R03.dark],['Memoria',C.MEM.dark],
+    ['Pruebas',C.TST.dark],['Entrega',C.END.dark],
+  ];
+  document.getElementById('legend').innerHTML=items.map(([l,c])=>
+    `<div class="li"><div class="ld" style="background:${c}"></div>${l}</div>`
+  ).join('<div style="width:1px;height:12px;background:var(--border)"></div>');
+}
 
-    %% --- Jugador ---
-    MonoBehaviour <|-- ActivadorIsla
-    class ActivadorIsla {
-        -bool yaActivado
-        -void OnTriggerEnter(Collider other)
-    }
+// ─── Tooltip ─────────────────────────────────────────────────────────────────
+function showTT(e,el){
+  const d=JSON.parse(el.dataset.tip.replace(/&quot;/g,'"'));
+  document.getElementById('tt').innerHTML=`
+    <div class="tt-ttl">${d.label}</div>
+    <div class="tt-r"><span class="tt-k">Inicio</span><span class="tt-v">${d.start}</span></div>
+    <div class="tt-r"><span class="tt-k">Fin</span><span class="tt-v">${d.end}</span></div>
+    <div class="tt-r"><span class="tt-k">Duración</span><span class="tt-v">${d.dur}</span></div>
+    <div class="tt-r"><span class="tt-k">Horas est.</span><span class="tt-v">${d.h}</span></div>
+    ${d.note?`<div class="tt-note">${d.note}</div>`:''}`;
+  document.getElementById('tt').style.display='block';
+  mvTT(e); el.onmousemove=mvTT;
+}
+function mvTT(e){
+  const tt=document.getElementById('tt');
+  tt.style.left=Math.min(e.clientX+14,window.innerWidth-tt.offsetWidth-8)+'px';
+  tt.style.top=(e.clientY-10)+'px';
+}
+function hideTT(){document.getElementById('tt').style.display='none';}
 
-    MonoBehaviour <|-- CamaraCoche
-    class CamaraCoche {
-        +Transform cocheObjetivo
-        +Transform puntoCamara
-        +float velocidadSuavizado
-        +float velocidadRotacion
-        -void FixedUpdate()
-    }
+// ─── Filters ─────────────────────────────────────────────────────────────────
+function setF(f){
+  activeF=f;
+  document.querySelectorAll('.btn[id^="fb"]').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.btn').forEach(b=>{if(b.textContent.trim()==='Todo')b.classList.toggle('on',f==='all');});
+  if(f!=='all') document.getElementById('fb-'+f)?.classList.add('on');
+  render();
+}
+function setZ(w){
+  document.documentElement.style.setProperty('--col-w',w+'px');
+  document.querySelectorAll('.btn[id^="zb"]').forEach(b=>b.classList.remove('on'));
+  const m={15:'sm',22:'md',30:'lg'};
+  document.getElementById('zb-'+m[w])?.classList.add('on');
+  render();
+}
 
-    MonoBehaviourPun <|-- CamaraMovement
-    class CamaraMovement {
-        +float velocidad
-        +Transform jugador
-        -float rotacionX
-        -Vector3 ultimaPosicion
-        -float acumuladorDistancia
-        -void Start()
-        -void Update()
-        +void BloquearCursor()
-        +void DesbloquearCursor()
-    }
+// ─── Render ──────────────────────────────────────────────────────────────────
+function render(){
+  const rows=buildRows();
+  buildFP(rows);
+  buildSA(rows);
+}
 
-    MonoBehaviourPun <|-- Escopeta
-    class Escopeta {
-        +Camera camaraJugador
-        +Transform puntaCanon
-        +Transform modeloArma
-        +AudioClip sonidoDisparo
-        +AudioClip sonidoRecarga
-        +string idArma
-        +int perdigones
-        +float dispersion
-        +float rango
-        +float dañoPorPerdigon
-        +float tiempoEntreDisparos
-        +int balasCargador
-        +int balasActuales
-        +int balasReserva
-        +int capacidadMochila
-        +float tiempoRecarga
-        -bool estaRecargando
-        +GameObject balaVisualPrefab
-        +GameObject efectoImpacto
-        +float velocidadBalaVisual
-        -float tiempoSiguienteDisparo
-        -Quaternion rotacionOriginal
-        -Vector3 posicionOriginal
-        -void Awake()
-        -void OnEnable()
-        -void Start()
-        -void AplicarStats()
-        -void Update()
-        -void Disparar()
-        +void RecibirMunicion(int cantidad)
-        -void OnGUI()
-    }
-
-    MonoBehaviourPun <|-- GameController
-    class GameController {
-        +float aceleracion
-        +float velocidadGiro
-        +float suavizadoGiro
-        +float velocidadMaxima
-        +float agarreLateral
-        +GameObject luzFrenoIzquierda
-        +GameObject luzFrenoDerecha
-        +Transform ruedaDelanteraIzquierda
-        +Transform ruedaDelanteraDerecha
-        +Transform ruedaTraseraIzquierda
-        +Transform ruedaTraseraDerecha
-        -Rigidbody rb
-        -float inputMotor
-        -float inputGiro
-        -float giroActual
-        -bool frenando
-        -void Start()
-        -void Update()
-        -void FixedUpdate()
-        -void ControlarLuces()
-        -void AnimarRuedas()
-    }
-
-    MonoBehaviourPun <|-- InteraccionCoche
-    class InteraccionCoche {
-        +GameObject camaraCoche
-        +GameObject uiMensaje
-        +GameObject canvasMira
-        +Transform puntoSalida
-        +float distanciaInteraccion
-        +float probabilidadPenetracion
-        -GameController scriptMovimientoCoche
-        -bool estoyConduciendo
-        -bool cocheOcupado
-        -void Start()
-        -void Update()
-        -void EntrarAlCoche()
-        -void SalirDelCoche()
-        -void SincronizarOcupacionCoche(bool ocupado)
-        +void RecibirDaño(float cantidad)
-        +void RecibirDañoRed(float cantidad, PhotonMessageInfo info)
-    }
-
-    MonoBehaviourPun <|-- PlayerController
-    class PlayerController {
-        +PlayerController LocalInstance
-        +RawImage imagenSangre
-        +AudioClip sonidoDolor
-        +float velocidadCaminar
-        +float velocidadCorrer
-        +float fuerzaSalto
-        +float gravedad
-        +float staminaMax
-        +float tasaRecuperacion
-        -float staminaActual
-        -bool estaCorriendo
-        +float vidaMaxima
-        +float vidaActual
-        +bool estaCaido
-        -float tiempoDesangrado
-        -float progresoRevivir
-        -PlayerController companeroViendo
-        +Transform sueloCheck
-        +float radioSuelo
-        +LayerMask capaSuelo
-        -CharacterController controller
-        -Vector3 velocidadVertical
-        -bool enSuelo
-        -Animator animator
-        -void Awake()
-        -void Start()
-        -void Update()
-        -void ActualizarStamina()
-        +void RecibirDaño(float cantidad)
-        +void EntrarEstadoCaido()
-        -void MuerteDefinitiva()
-        +void Curar(float cantidad)
-        -void ControlarEfectoSangre()
-        -void ComprobarReanimacion()
-        +void SerReanimado()
-        -void OnDrawGizmosSelected()
-        +void SincronizarVisibilidad(bool esVisible)
-        -void OnGUI()
-    }
-
-    MonoBehaviourPun <|-- PlayerInventory
-    class PlayerInventory {
-        +GameObject[] armas
-        +int armaActual
-        +bool tieneSecundaria
-        +string nombrePrefabGranada
-        +Transform puntoLanzamiento
-        +int cantidadGranadas
-        +int maxGranadas
-        +float fuerzaLanzamiento
-        +AudioClip sonidoLanzarGranada
-        +Image iconoSecundaria
-        +TextMeshProUGUI textoGranadas
-        +Color colorDesactivado
-        +Color colorActivado
-        -void Start()
-        -void Update()
-        -void EquiparArmaRed(int indice)
-        -void EquiparArmaLocal(int indice)
-        +void DesbloquearSecundaria()
-        -void LanzarGranada()
-        +void RecibirGranadas(int cantidad)
-        -void ActualizarUI()
-    }
-
-    MonoBehaviourPun <|-- RayCastGun
-    class RayCastGun {
-        +Camera playerCamera
-        +Transform laserOrigin
-        +Transform modeloArma
-        +AudioClip sonidoDisparo
-        +AudioClip sonidoRecarga
-        +string idArma
-        +float gunRange
-        +float fireRate
-        +float laserDuration
-        +float damage
-        +int balasCargador
-        +int balasActuales
-        +int balasReserva
-        +int capacidadMochila
-        +float tiempoRecarga
-        -bool estaRecargando
-        -LineRenderer laserLine
-        -float fireTimer
-        -Quaternion rotacionOriginal
-        -void Awake()
-        -void AplicarStatsDeBaseDeDatos()
-        -void OnEnable()
-        -void Update()
-        -void DispararLaser()
-        +void RecibirMunicion(int cantidad)
-        -void OnGUI()
-    }
-
-    MonoBehaviourPun <|-- VidaEnemigo
-    class VidaEnemigo {
-        +float vidaMaxima
-        +float vidaActual
-        +int puntosRecompensa
-        +Slider barraDeVida
-        +Animator animator
-        +Canvas canvasVida
-        +string nombrePrefabMunicion
-        +float probabilidadDrop
-        +string nombrePrefabGranada
-        +float probabilidadGranada
-        -bool estaMuerto
-        +bool perteneceALaRonda
-        -void Start()
-        -void LateUpdate()
-        +void RecibirDañoRed(float cantidad, PhotonMessageInfo info)
-        -void Morir(bool fueMio)
-        -void GenerarLootEnRed()
-    }
-
-    %% --- Managers ---
-    MonoBehaviour <|-- ConfiguracionManager
-    class ConfiguracionManager {
-        +Slider sliderVolumen
-        +Slider sliderBrillo
-        +TMP_Dropdown dropdownResolucion
-        +TMP_Dropdown dropdownModoJuego
-        +Image panelBrilloOverlay
-        -Resolution[] resolucionesSoportadas
-        -void Start()
-        -void ConfigurarDropdownResoluciones()
-        -void ConfigurarDropdownModoJuego()
-        +void CambiarVolumen(float valor)
-        +void CambiarBrillo(float valor)
-        +void CambiarResolucion(int indiceOpcion)
-        +void CambiarModoJuego(int indiceOpcion)
-        -void CargarAjustesGuardados()
-    }
-
-    MonoBehaviour <|-- ControlLuz
-    class ControlLuz {
-        +Light luz
-        +float paso
-        -void Update()
-    }
-
-    MonoBehaviourPun <|-- GameManager
-    class GameManager {
-        +GameManager Instance
-        +string nombrePrefabEnemigo
-        +string nombrePrefabBoss
-        +string nombrePrefabBossFinal
-        +string nombrePrefabBotiquin
-        +string nombrePrefabArmaSecundaria
-        +Transform[] puntosDeSpawn
-        +Transform spawnBoss
-        +Transform[] puntosSpawnBotiquines
-        +Transform[] puntosSpawnArmas
-        +int enemigosPorRonda
-        +float tiempoEntreRondas
-        +int rondaFinal
-        +GameObject naveEspacial
-        -bool armaYaSpawneada
-        +int botiquinesPorRonda
-        +int rondaActual
-        +int enemigosVivos
-        +int totalMuertes
-        -bool partidaTerminada
-        +int puntosPorEnemigoNormal
-        +int puntosPorBoss
-        +int puntosBonusVictoria
-        +int puntuacionActualPartida
-        +TextMeshProUGUI textoPuntuacion
-        +TextMeshProUGUI textoRonda
-        +int jugadoresCaidos
-        +bool empezarRondaAlInicio
-        -void Awake()
-        -void Start()
-        +void ActivarRondasManualmente()
-        -void SpawnearBoss(string nombrePrefab)
-        -void SpawnearArmaSecundaria()
-        -void SpawnearBotiquines()
-        -void GenerarEnemigo()
-        +void EnemigoDerrotado(bool esJefe = false, bool perteneceALaRonda = true)
-        -void ActualizarTextoRondaRed(int rondaNum, string textoAMostrar)
-        -void ActualizarPuntuacionRed(int bajas, int puntos)
-        -void ActivarFinalNivelRed()
-        -void CambiarMusicaRed(bool esBoss)
-        +void VictoriaPartida()
-        +void DerrotaPartida()
-        -void GuardarEstadisticasEnLaNube()
-        +float ObtenerTiempoDesangrado()
-        +void RegistrarCaidaJugador()
-        +void RegistrarReanimacionJugador()
-        +void EjecutarDerrotaGlobalRed()
-    }
-
-    MonoBehaviourPun <|-- GameManager2
-    class GameManager2 {
-        +GameManager2 Instance
-        +int multiplicadorDificultad
-        +float velocidadDeSpawn
-        +int escoltaDelBoss
-        +string nombrePrefabEnemigo
-        +string nombrePrefabBoss
-        +string nombrePrefabBossFinal
-        +string nombrePrefabBotiquin
-        +string nombrePrefabArmaSecundaria
-        +Transform[] puntosDeSpawn
-        +Transform spawnBoss
-        +Transform[] puntosSpawnBotiquines
-        +Transform[] puntosSpawnArmas
-        +int enemigosPorRonda
-        +float tiempoEntreRondas
-        +int rondaFinal
-        +GameObject naveEspacial
-        -bool armaYaSpawneada
-        +int botiquinesMaximos
-        +int rondaActual
-        +int enemigosVivos
-        +int totalMuertes
-        -bool partidaTerminada
-        +int puntosPorEnemigoNormal
-        +int puntosPorBoss
-        +int puntosBonusVictoria
-        +int puntuacionActualPartida
-        +TextMeshProUGUI textoPuntuacion
-        +TextMeshProUGUI textoRonda
-        +int jugadoresCaidos
-        -void Awake()
-        -void Start()
-        -void SpawnearBoss(string nombrePrefab)
-        -void SpawnearArmaSecundaria()
-        -void SpawnearBotiquines()
-        -void GenerarEnemigo()
-        +void EnemigoDerrotado(bool esJefe = false)
-        -void ActualizarTextoRondaRed(int rondaNum, string textoAMostrar)
-        -void ActualizarPuntuacionRed(int bajas, int puntos)
-        -void ActivarFinalNivelRed()
-        -void CambiarMusicaRed(bool esBoss)
-        +void VictoriaPartida()
-        +void DerrotaPartida()
-        -void GuardarEstadisticasEnLaNube()
-        +float ObtenerTiempoDesangrado()
-        +void RegistrarCaidaJugador()
-        +void RegistrarReanimacionJugador()
-        +void EjecutarDerrotaGlobalRed()
-    }
-
-    MonoBehaviour <|-- GestorNivel
-    class GestorNivel {
-        +string idNivelActual
-        +int numeroNivelActual
-        +void CompletarNivel()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- LuzZonalTitileo
-    class LuzZonalTitileo {
-        +Light luzZonal
-        +bool encendida
-        +float intensidadBase
-        +float variacion
-        +float velocidad
-        -void Start()
-        -void Update()
-    }
-
-    MonoBehaviourPunCallbacks <|-- NetworkManager
-    class NetworkManager {
-        +NetworkManager Instancia
-        -void Awake()
-        -void Start()
-        +void OnConnectedToMaster()
-        +void CrearSala()
-        +void UnirseSala(string codigo)
-        +void OnJoinedRoom()
-        +void EmpezarPartida()
-    }
-
-    MonoBehaviour <|-- ControladorSpawn
-    class ControladorSpawn {
-        +string nombrePrefabJugador
-        +Transform[] puntosDeSpawn
-        -void Start()
-    }
-
-    %% --- Firebase ---
-    MonoBehaviour <|-- AuthManager
-    class AuthManager {
-        +AuthManager Instance_prop
-        -FirebaseAuth _auth
-        +FirebaseUser UsuarioActual
-        +bool AutenticacionLista_prop
-        -void Awake()
-        -void Start()
-        +Task~bool~ IniciarSesionAnonima()
-        +Task~bool~ IniciarSesionCorreo(string email, string password)
-        +Task~bool~ RegistrarCorreo(string email, string password, string apodo)
-        +void CerrarSesion()
-    }
-
-    MonoBehaviour <|-- BaseDeDatosManager
-    class BaseDeDatosManager {
-        +BaseDeDatosManager Instance_prop
-        -FirebaseFirestore _db
-        +bool ConfiguracionCargada_prop
-        +DatosUsuario DatosUsuarioActual_prop
-        +ProgresoJugador ProgresoActual_prop
-        -void Awake()
-        -void Start()
-        +Task DescargarConfiguracion()
-        +DatosArma ObtenerDatosArma(string idArma)
-        +DatosEnemigo ObtenerDatosEnemigo(string idEnemigo)
-        +DatosNivel ObtenerDatosNivel(string idNivel)
-        +Task VerificarUsuario(Firebase.Auth.FirebaseUser user)
-        +Task CrearNuevoUsuario(Firebase.Auth.FirebaseUser user, string apodo)
-        +Task CargarProgreso(string userId)
-        +Task GuardarProgreso()
-        +Task ActualizarEstadisticasFinPartida(int puntuacionPartida)
-        +Task ActualizarNombreUsuario(string userId, string nuevoApodo)
-        +Task ActualizarAvatarUsuario(string userId, int nuevoAvatarId)
-        +void LimpiarDatosSesion()
-    }
-
-    MonoBehaviour <|-- FirebaseManager
-    class FirebaseManager {
-        +FirebaseManager Instance_prop
-        +bool EstaInicializado
-        -void Awake()
-        -void InicializarFirebase()
-    }
-
-    %% --- Modelos ---
-    Modelos <|-- DatosArma
-    class DatosArma {
-        +string nombre_visible_prop
-        +int dano_prop
-        +float cadencia_prop
-        +int tamano_cargador_prop
-        +string tipo_prop
-        +int precio_compra_prop
-    }
-
-    Modelos <|-- DatosEnemigo
-    class DatosEnemigo {
-        +int vida_maxima_prop
-        +float velocidad_movimiento_prop
-        +int puntos_recompensa_prop
-        +List~string~ habilidades_prop
-    }
-
-    Modelos <|-- DatosNivel
-    class DatosNivel {
-        +string nombre_escena_prop
-        +int cantidad_enemigos_total_prop
-        +bool tiene_jefe_prop
-        +int tiempo_limite_prop
-    }
-
-    Modelos <|-- DatosUsuario
-    class DatosUsuario {
-        +string correo_prop
-        +string nombre_google_prop
-        +string apodo_prop
-        +bool perfil_completado_prop
-        +Timestamp fecha_registro_prop
-        +int puntuacion_global_prop
-        +int partidas_jugadas_prop
-        +int avatar_id_prop
-    }
-
-    Modelos <|-- EntradaRanking
-    class EntradaRanking {
-        +string id_usuario_prop
-        +string apodo_prop
-        +int puntuacion_prop
-        +int oleada_alcanzada_prop
-        +Timestamp fecha_prop
-    }
-
-    Modelos <|-- ProgresoJugador
-    class ProgresoJugador {
-        +int nivel_actual_prop
-        +List~string~ armas_desbloqueadas_prop
-        +List~string~ logros_desbloqueados_prop
-        +int enemigos_eliminados_prop
-        +int jefes_derrotados_prop
-        +int veces_muerto_prop
-        +int dano_infligido_prop
-        +int dano_recibido_prop
-        +float distancia_recorrida_prop
-    }
-
-    Modelos <|-- SalaJuego
-    class SalaJuego {
-        +string id_anfitrion_prop
-        +string estado_prop
-        +string dificultad_prop
-        +int max_jugadores_prop
-        +string nivel_seleccionado_prop
-        +bool is_open_prop
-        +bool is_visible_prop
-    }
-
-    %% --- Objetos ---
-    MonoBehaviour <|-- AmmoPickup
-    class AmmoPickup {
-        +int balasRifle
-        +int balasEscopeta
-        +float velocidadGiro
-        +float tiempoDesaparicion
-        -void Start()
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- Bala
-    class Bala {
-        +float damage
-        -bool yaGolpeo
-        -float tiempoVida
-        -void Start()
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- BolaFuego
-    class BolaFuego {
-        +float damage
-        +float velocidad
-        +GameObject prefabEfectoImpacto
-        +AudioClip sonidoImpacto
-        -bool yaGolpeo
-        -float tiempoVida
-        -void Start()
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-        -void Impactar(Collider other)
-    }
-
-    MonoBehaviour <|-- Botiquin
-    class Botiquin {
-        +float cantidadCura
-        +float velocidadGiro
-        +AudioClip sonidoCuracion
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- Escenario
-    class Escenario {
-        +GameObject cubo
-        +GameObject esfera
-        -void Start()
-    }
-
-    MonoBehaviourPun <|-- Granada
-    class Granada {
-        +float radio
-        +float fuerza
-        +float daño
-        +float tiempoParaExplotar
-        +GameObject efectoExplosion
-        +AudioClip sonidoExplosion
-        -bool haChocado
-        -float tiempoCreacion
-        -void Start()
-        -void OnCollisionEnter(Collision collision)
-        -void Explotar()
-        -void EfectosExplosionRed(Vector3 posicionExacta)
-    }
-
-    MonoBehaviour <|-- GrenadePickup
-    class GrenadePickup {
-        +int cantidadAñadir
-        +float velocidadGiro
-        +float tiempoDesaparicion
-        -void Start()
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- ItemArma
-    class ItemArma {
-        +float velocidadGiro
-        -void Update()
-        -void OnTriggerEnter(Collider other)
-    }
-
-    MonoBehaviour <|-- Linterna
-    class Linterna {
-        +Light linterna
-        +float intensidad
-        +Color colorLuz
-        -void Start()
-        -void Update()
-    }
-
-    MonoBehaviour <|-- NaveSalida
-    class NaveSalida {
-        +string nombreSiguienteEscena
-        -void OnTriggerEnter(Collider other)
-    }
-
-    %% --- Sonidos ---
-    MonoBehaviour <|-- AudioManager
-    class AudioManager {
-        +AudioManager Instance
-        +AudioSource fuenteMusica
-        +AudioSource fuenteSFX
-        +AudioClip musicaNormal
-        +AudioClip musicaBoss
-        -void Awake()
-        +void PonerMusicaNormal()
-        +void PonerMusicaBoss()
-        +void ReproducirSonido(AudioClip clip, float volumen = 1f)
-    }
-
-    MonoBehaviour <|-- SoundManager
-    class SoundManager {
-        +SoundManager Instance
-        +AudioClip backgroundMusic
-        +AudioClip hitSound
-        +AudioClip jumpSound
-        -AudioSource musicSource
-        -AudioSource effectsSource
-        -void Awake()
-        -void Start()
-        -void Update()
-        +void PlayBackgroundMusic()
-        +void PlayEffectSound(AudioClip clip)
-        +void PlayZoneSound(AudioClip clip, float volume)
-    }
-
-    MonoBehaviour <|-- SoundZona
-    class SoundZona {
-        +AudioClip zoneSound
-        +float zoneSoundVolume
-        -AudioSource zoneAudioSource
-        -void Start()
-        -void OnTriggerEnter(Collider other)
-        -void OnTriggerExit(Collider other)
-    }
-
-    %% --- UI ---
-    MonoBehaviour <|-- BotonCambioEscena
-    class BotonCambioEscena {
-        +string escenaDestino
-        +void IrAEscenaDestino()
-        +void CambiarDeEscena(string nombreDeLaEscena)
-        +void SalirDelJuego()
-    }
-
-    MonoBehaviour <|-- ControladorMaestroUI
-    class ControladorMaestroUI {
-        +GameObject seccionInicio
-        +GameObject seccionMenuPrincipal
-        +LoginUIController loginController
-        +GameObject panelPrincipalCentral
-        +GameObject[] panelesSecundarios
-        -void Start()
-        +void IrAlMenuPrincipal()
-        +void VolverAlInicio()
-    }
-
-    MonoBehaviour <|-- GameOver
-    class GameOver {
-        +AudioClip sonidoGameOver
-        +AudioSource audioSource
-        -void Start()
-        +void VolverAlMenu()
-    }
-
-    MonoBehaviourPunCallbacks <|-- ManejadorUIPhoton
-    class ManejadorUIPhoton {
-        +ManejadorUIPhoton Instancia
-        +GameObject panelPrincipal
-        +GameObject panelCrearUnirse
-        +GameObject panelUnirseCodigo
-        +GameObject panelSalaEspera
-        +TMP_InputField inputCodigoSala
-        +TextMeshProUGUI textoCodigoMostrado
-        +TextMeshProUGUI textoContadorJugadores
-        +TextMeshProUGUI textoListaJugadores
-        +GameObject botonEmpezarPartida
-        +TMP_Dropdown dropdownDificultad
-        -void Awake()
-        +void BotonCrearSala()
-        +void BotonConfirmarUnirse()
-        +void MostrarPanelEspera()
-        +void OnPlayerEnteredRoom(Player newPlayer)
-        +void OnPlayerLeftRoom(Player otherPlayer)
-        -void ActualizarContadorJugadores()
-        +void ClickEnEmpezarPartida()
-        -void ActualizarListaNombres()
-        +void GuardarAjustesEnRed()
-        +void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-    }
-
-    MonoBehaviour <|-- LoginUIController
-    class LoginUIController {
-        +ControladorMaestroUI controladorMaestro
-        +GameObject panelInicio
-        +GameObject panelLogin
-        +GameObject panelRegistro
-        +GameObject panelCarga
-        +Button btnJugarPrincipal
-        +TMP_InputField inputLoginEmail
-        +TMP_InputField inputLoginPassword
-        +Button btnEntrar
-        +Button btnIrARegistro
-        +TMP_InputField inputRegistroApodo
-        +TMP_InputField inputRegistroEmail
-        +TMP_InputField inputRegistroPassword
-        +TMP_InputField inputRegistroConfirmarPassword
-        +Button btnRegistrar
-        +Button btnVolverLogin
-        +TextMeshProUGUI textoMensajeError
-        -void Start()
-        +void ResetearAInicio()
-        -void MostrarPanelInicio()
-        -void MostrarPanelLogin()
-        -void MostrarPanelRegistro()
-        -void ComprobarSesionGuardada()
-        -void IntentarLogin()
-        -void IntentarRegistro()
-    }
-
-    MonoBehaviour <|-- PerfilUsuarioControlador
-    class PerfilUsuarioControlador {
-        +ControladorMaestroUI controladorMaestro
-        +GameObject panelLecturaView
-        +GameObject panelEdicionView
-        +GameObject panelConfirmacionSalir
-        +Button botonAbrirConfirmacion
-        +Button botonSiSalir
-        +Button botonNoSalir
-        +TextMeshProUGUI textoNombreVista
-        +TextMeshProUGUI textoCorreoVista
-        +TMP_InputField inputNombreEdicion
-        +TMP_InputField inputCorreoEdicion
-        +RawImage fotoPerfilVista
-        +RawImage fotoMenuPrincipal
-        +Texture[] listaFotos
-        +Button botonCambiarFoto
-        -int indiceAvatarActual
-        +TextMeshProUGUI textoEstado
-        +Button botonEditar
-        +Button botonGuardar
-        -void Start()
-        -void MostrarPanelConfirmacion()
-        -void OcultarPanelConfirmacion()
-        -void EjecutarCerrarSesion()
-        +void MostrarPanelLectura()
-        +void ActivarModoEdicion()
-        -void CiclarFoto()
-        -void AplicarFotoEnPantalla(int indice)
-        -void GuardarCambiosFirebase()
-    }
-
-    MonoBehaviour <|-- ProgresoUIController
-    class ProgresoUIController {
-        +TextMeshProUGUI txtPartidasJugadas
-        +TextMeshProUGUI txtPuntuacionTotal
-        +TextMeshProUGUI txtEnemigosEliminados
-        +TextMeshProUGUI txtJefesDerrotados
-        +TextMeshProUGUI txtVecesMuerto
-        +TextMeshProUGUI txtDanoInfligido
-        +TextMeshProUGUI txtDanoRecibido
-        +TextMeshProUGUI txtDistanciaRecorrida
-        +TextMeshProUGUI txtArmasDesbloqueadas
-        -void OnEnable()
-    }
-
-    MonoBehaviour <|-- SalirJuego
-    class SalirJuego {
-        +void CerrarAplicacion()
-    }
-    </div>
-
-    <div id="mermaid-container"></div>
-
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
-
-        // 1. Configuramos Mermaid
-        mermaid.initialize({ 
-            startOnLoad: false, 
-            theme: 'dark', // Tema oscuro para que combine con el fondo
-            maxTextSize: 900000 
-        });
-
-        // 2. Función principal para renderizar y añadir zoom
-        async function renderDiagram() {
-            const source = document.getElementById('mermaid-source').textContent;
-            const container = document.getElementById('mermaid-container');
-            
-            try {
-                // Renderizamos el SVG
-                const { svg } = await mermaid.render('mermaid-svg', source);
-                container.innerHTML = svg;
-
-                // Seleccionamos el SVG generado
-                const svgElement = container.querySelector('svg');
-                
-                // D3 necesita agrupar todo el contenido para escalarlo bien.
-                // Mermaid ya genera un <g> principal, lo seleccionamos:
-                const inner = d3.select(svgElement).select('g');
-                
-                // Creamos el comportamiento de Zoom y Paneo
-                const zoom = d3.zoom()
-                    .scaleExtent([0.1, 10]) // Límites de zoom (10% a 1000%)
-                    .on('zoom', (e) => {
-                        inner.attr('transform', e.transform);
-                    });
-
-                // Aplicamos el comportamiento al SVG completo
-                d3.select(svgElement).call(zoom);
-                
-                // Centramos y alejamos un poco la vista inicial para que se vea bien
-                const svgWidth = svgElement.clientWidth || window.innerWidth;
-                const svgHeight = svgElement.clientHeight || window.innerHeight;
-                d3.select(svgElement).call(zoom.translateTo, svgWidth/2, svgHeight/2);
-                d3.select(svgElement).call(zoom.scaleTo, 0.8);
-
-            } catch (error) {
-                console.error("Error renderizando Mermaid:", error);
-                container.innerHTML = `<p style="color:red; margin-top: 100px; text-align:center;">Error al generar el diagrama. Revisa la consola o asegúrate de haber pegado bien el código.</p>`;
-            }
-        }
-
-        // Ejecutamos
-        renderDiagram();
-    </script>
+function init(){
+  buildLegend();
+  buildStats();
+  render();
+  // Scroll to today
+  if(todayIdx>=0){
+    requestAnimationFrame(()=>{
+      const cw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--col-w'));
+      const o=document.getElementById('outer');
+      o.scrollLeft=Math.max(0,todayIdx*cw-o.clientWidth/3);
+    });
+  }
+}
+init();
+</script>
 </body>
 </html>
